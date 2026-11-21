@@ -26,22 +26,14 @@ export type CityTradeContent = {
   faqs: FAQ[];
 };
 
-export type PartnerPlans = {
-  /** Prepaid, pay-as-you-go lead pack. */
-  leadPack: {
-    name: string;
-    leads: number;
-    price: number;
-    features: string[];
-  };
-  /** Flat monthly retainer with priority placement. Seats are limited per trade. */
-  priority: {
-    name: string;
-    monthlyPrice: number;
-    seatsTotal: number;
-    seatsOpen: number;
-    features: string[];
-  };
+/** The contractor offer: a flat monthly retainer with a limited number of seats per trade. */
+export type PartnerPlan = {
+  name: string;
+  monthlyPrice: number;
+  /** Seats per trade. Keep this equal to site.maxQuotes so every project can reach its full quote cap. */
+  seatsTotal: number;
+  seatsOpen: number;
+  features: string[];
 };
 
 export type Trade = {
@@ -65,37 +57,23 @@ export type Trade = {
   localConsiderations: Consideration[];
   /** Trade-specific FAQs shown on the homepage alongside the general ones. */
   faqs: FAQ[];
-  partner: PartnerPlans;
+  partner: PartnerPlan;
   cityContent: Partial<Record<string, CityTradeContent>>;
 };
 
-/* Partner plans. PRICES ARE PLACEHOLDERS — set your real numbers before launch. */
-const defaultPartnerPlans: PartnerPlans = {
-  leadPack: {
-    name: "10-Lead Growth Pack",
-    leads: 10,
-    price: 450,
-    features: [
-      "10 prepaid homeowner requests in your service cities",
-      "Each request shared with 2–3 pros max — never 5+",
-      "Pay as you go: no contract, no monthly fee",
-      "Reload anytime when your pack runs low",
-      "Bad-lead credit for wrong numbers or out-of-area requests",
-    ],
-  },
-  priority: {
-    name: "Monthly Priority Placement",
-    monthlyPrice: 597,
-    seatsTotal: 2,
-    seatsOpen: 2,
-    features: [
-      "First claim on every matching request in your service cities",
-      "A guaranteed spot among the 2–3 pros on each project you accept",
-      "No per-lead charges: one flat monthly retainer",
-      "Featured as a Priority Partner to homeowners",
-      "Month-to-month. Cancel anytime",
-    ],
-  },
+/* Partner retainer. THE PRICE IS A PLACEHOLDER — set your real number before launch. */
+const defaultPartnerPlan: PartnerPlan = {
+  name: "Monthly Priority Placement",
+  monthlyPrice: 597,
+  seatsTotal: 3,
+  seatsOpen: 3,
+  features: [
+    "Every matching homeowner request in the cities you serve",
+    "Each project shared with 2–3 pros max — never 5+",
+    "No per-lead charges: one flat monthly retainer",
+    "Limited seats per trade, so no one can buy their way past you",
+    "Month-to-month. Cancel anytime",
+  ],
 };
 
 export const trades: Trade[] = [
@@ -147,7 +125,7 @@ export const trades: Trade[] = [
         a: "Four inches is common for passenger cars. If you park heavy pickups, trailers, boats, or RVs, ask each contractor to quote 5–6 inches with rebar. That's common for 417 homes on acreage.",
       },
     ],
-    partner: defaultPartnerPlans,
+    partner: defaultPartnerPlan,
     cityContent: {
       "springfield-mo": {
         intro: [
@@ -424,7 +402,7 @@ export const trades: Trade[] = [
         a: "Most established 417 roofers know local adjusters and can document damage with photos and measurements. Never sign over insurance proceeds without reading the contract carefully.",
       },
     ],
-    partner: defaultPartnerPlans,
+    partner: defaultPartnerPlan,
     cityContent: {},
   },
 ];

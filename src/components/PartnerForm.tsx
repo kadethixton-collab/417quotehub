@@ -1,17 +1,16 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
-import { PARTNER_PLANS, formatPhone, validatePartner, type FieldErrors, type PartnerInput } from "@/lib/lead";
+import { useState, type FormEvent } from "react";
+import { formatPhone, validatePartner, type FieldErrors, type PartnerInput } from "@/lib/lead";
 import { Icon } from "./Icons";
 
 type Props = {
-  trades: { slug: string; name: string; prioritySeatsOpen: number }[];
+  trades: { slug: string; name: string; seatsOpen: number }[];
   cities: { slug: string; name: string }[];
 };
 
 export default function PartnerForm({ trades, cities }: Props) {
   const [form, setForm] = useState<PartnerInput>({
-    plan: "",
     companyName: "",
     contactName: "",
     phone: "",
@@ -29,23 +28,12 @@ export default function PartnerForm({ trades, cities }: Props) {
   const [seatStatus, setSeatStatus] = useState("");
   const [serverError, setServerError] = useState("");
 
-  // Plan cards link to /contractors?plan=priority#apply — preselect that plan.
-  useEffect(() => {
-    const sync = () => {
-      const p = new URLSearchParams(window.location.search).get("plan");
-      if (p && PARTNER_PLANS.some((x) => x.id === p)) setForm((f) => ({ ...f, plan: p }));
-    };
-    sync();
-    window.addEventListener("popstate", sync);
-    return () => window.removeEventListener("popstate", sync);
-  }, []);
-
   const set = <K extends keyof PartnerInput>(k: K, v: PartnerInput[K]) => {
     setForm((f) => ({ ...f, [k]: v }));
     if (errors[k as string]) setErrors(({ [k as string]: _omit, ...rest }) => rest);
   };
   const selectedTrade = trades.find((t) => t.slug === form.trade);
-  const priorityFull = selectedTrade ? selectedTrade.prioritySeatsOpen <= 0 : false;
+  const waitlist = selectedTrade ? selectedTrade.seatsOpen <= 0 : false;
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -84,7 +72,7 @@ export default function PartnerForm({ trades, cities }: Props) {
         <h3 className="text-2xl font-extrabold text-slate-900">Application received!</h3>
         <p className="mt-2 text-slate-600">
           {seatStatus === "waitlist"
-            ? "Priority Placement seats are currently full, so you're on the waitlist. In the meantime, you can start right away with a 10-Lead Growth Pack. We'll reach out within 2 business days."
+            ? "All seats in your trade are currently filled, so you're on the waitlist. We'll reach out the moment a seat opens."
             : "We'll review your company and reach out within 2 business days to verify your details and get you set up."}
         </p>
       </div>
@@ -98,24 +86,6 @@ export default function PartnerForm({ trades, cities }: Props) {
 
   return (
     <form onSubmit={onSubmit} noValidate className="relative space-y-4 rounded-2xl bg-white p-6 shadow-xl ring-1 ring-slate-200 sm:p-8">
-      <fieldset>
-        <legend className={label}>Which plan interests you?</legend>
-        <div className="mt-2 grid gap-2">
-          {PARTNER_PLANS.map((p) => {
-            const checked = form.plan === p.id;
-            const full = p.id === "priority" && priorityFull;
-            return (
-              <label key={p.id} className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 text-sm ${checked ? "border-brand-600 bg-brand-50" : "border-slate-200"}`}>
-                <input type="radio" name="plan" value={p.id} checked={checked} onChange={() => set("plan", p.id)} className="h-4 w-4 accent-brand-600" />
-                <span className="font-medium text-slate-800">{p.label}</span>
-                {full && <span className="ml-auto rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">Waitlist</span>}
-              </label>
-            );
-          })}
-        </div>
-        {err("plan")}
-      </fieldset>
-
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="pf-company" className={label}>Company name</label>
@@ -142,7 +112,9 @@ export default function PartnerForm({ trades, cities }: Props) {
           <select id="pf-trade" value={form.trade} onChange={(e) => set("trade", e.target.value)} className={input} aria-invalid={!!errors.trade}>
             {trades.length > 1 && <option value="">Select…</option>}
             {trades.map((t) => (
-              <option key={t.slug} value={t.slug}>{t.name}</option>
+              <option key={t.slug} value={t.slug}>
+                {t.name} — {t.seatsOpen > 0 ? `${t.seatsOpen} seat${t.seatsOpen === 1 ? "" : "s"} open` : "waitlist"}
+              </option>
             ))}
           </select>
           {err("trade")}
@@ -203,7 +175,7 @@ export default function PartnerForm({ trades, cities }: Props) {
       </div>
       {serverError && <p className="rounded-lg bg-red-50 p-3 text-sm font-medium text-red-700" role="alert">{serverError}</p>}
       <button type="submit" disabled={status === "submitting"} className="w-full rounded-xl bg-accent-500 py-4 text-lg font-extrabold text-slate-900 shadow hover:bg-accent-400 disabled:opacity-60">
-        {status === "submitting" ? "Submitting…" : form.plan === "priority" && priorityFull ? "Join the Priority Waitlist" : "Apply to Partner"}
+        {status === "submitting" ? "Submitting…" : waitlist ? "Join the Waitlist" : "Apply to Claim a Seat"}
       </button>
     </form>
   );

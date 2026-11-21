@@ -26,14 +26,7 @@ export type LeadInput = {
   startedAt?: number;
 };
 
-export const PARTNER_PLANS = [
-  { id: "lead-pack", label: "10-Lead Growth Pack (pay-as-you-go)" },
-  { id: "priority", label: "Monthly Priority Placement (flat retainer)" },
-  { id: "unsure", label: "Not sure yet — help me choose" },
-] as const;
-
 export type PartnerInput = {
-  plan: string;
   companyName: string;
   contactName: string;
   phone: string;
@@ -98,7 +91,6 @@ export function validatePartner(input: PartnerInput): FieldErrors {
   if (!normalizePhone(input.phone)) e.phone = "Please enter a valid 10-digit phone number.";
   if (!isEmail(input.email)) e.email = "Please enter a valid email address.";
   if (!input.trade) e.trade = "Please choose your trade.";
-  if (!PARTNER_PLANS.some((p) => p.id === input.plan)) e.plan = "Please choose a plan.";
   if (!input.yearsInBusiness) e.yearsInBusiness = "Please choose one.";
   if (!input.serviceCities?.length) e.serviceCities = "Choose at least one city you serve.";
   if (!input.insured) e.insured = "Partners must carry general liability insurance.";

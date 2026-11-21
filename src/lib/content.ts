@@ -55,7 +55,7 @@ export function generalFaqs(trade: Trade): FAQ[] {
   return [
     {
       q: "Is it really free?",
-      a: `Yes — 100% free for homeowners, with no obligation to hire anyone. ${site.name} is paid by our local partner contractors, through prepaid lead packs or a flat monthly placement plan. You'll never pay us a dime.`,
+      a: `Yes — 100% free for homeowners, with no obligation to hire anyone. ${site.name} is paid by our local partner contractors, through a flat monthly retainer. You'll never pay us a dime.`,
     },
     {
       q: "Will my phone get spammed?",

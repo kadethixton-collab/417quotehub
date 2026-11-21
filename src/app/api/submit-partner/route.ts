@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { site } from "@/config/site";
 import { cities } from "@/config/cities";
 import { tradeBySlug } from "@/config/trades";
-import { PARTNER_PLANS, normalizePhone, validatePartner, type PartnerInput } from "@/lib/lead";
+import { normalizePhone, validatePartner, type PartnerInput } from "@/lib/lead";
 import { forwardToWebhook } from "@/lib/webhook";
 
 export const runtime = "nodejs";
@@ -19,7 +19,6 @@ export async function POST(req: Request) {
 
   const validSlugs = new Set(cities.map((c) => c.slug));
   const input: PartnerInput = {
-    plan: str(body.plan, 20),
     companyName: str(body.companyName, 150),
     contactName: str(body.contactName, 120),
     phone: str(body.phone, 30),
@@ -49,11 +48,9 @@ export async function POST(req: Request) {
     brand: site.name,
     trade: trade!.slug,
     tradeName: trade!.name,
-    plan: input.plan,
-    planLabel: PARTNER_PLANS.find((p) => p.id === input.plan)!.label,
-    // Priority Placement seats are limited per trade; lead packs are always available.
-    seatStatus:
-      input.plan !== "priority" ? "not_applicable" : trade!.partner.priority.seatsOpen > 0 ? "seat_available" : "waitlist",
+    plan: trade!.partner.name,
+    monthlyPrice: trade!.partner.monthlyPrice,
+    seatStatus: trade!.partner.seatsOpen > 0 ? "seat_available" : "waitlist",
     companyName: input.companyName,
     contactName: input.contactName,
     phone: normalizePhone(input.phone),

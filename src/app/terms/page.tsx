@@ -34,7 +34,7 @@ export default function Terms() {
 
       <h2>3. Free for homeowners</h2>
       <p>
-        Our service is free for homeowners. You are never obligated to hire any contractor we match you with. Contractors pay us to participate in our network, through prepaid lead packs or a monthly placement plan.
+        Our service is free for homeowners. You are never obligated to hire any contractor we match you with. Contractors pay us to participate in our network, through a flat monthly placement retainer.
       </p>
 
       <h2>4. Contractor vetting</h2>

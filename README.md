@@ -28,7 +28,7 @@ The brand (417 Quote Hub), the primary trade (Concrete & Driveway), and the quot
 | --- | --- |
 | Brand name, email, domain, quote cap (`maxQuotes: 3`, `quoteRange: "2–3"`) | `src/config/site.ts` |
 | Which trade the homepage and `/services/[city]` show | `primaryTradeSlug` in `src/config/site.ts` |
-| Trade content (project types, FAQs, partner plan pricing, per-city copy) | `src/config/trades.ts` |
+| Trade content (project types, FAQs, retainer price & seats, per-city copy) | `src/config/trades.ts` |
 | Cities (neighborhoods, landmarks, ZIPs, permit offices) | `src/config/cities.ts` |
 | Brand colors | `@theme` block in `src/app/globals.css` |
 
@@ -84,7 +84,7 @@ The quote form POSTs to `/api/submit-lead`. The route validates the request on t
 - **No webhook set:** the lead is logged to the server console (visible in Vercel → Logs) and the homeowner still sees the "You're Matched!" screen.
 - **Webhook fails** (non-2xx or a 10-second timeout): the full payload is logged so the lead isn't lost, and the homeowner gets a "please try again" message.
 
-Contractor applications from `/contractors` POST to `/api/submit-partner`. They are forwarded to `PARTNER_WEBHOOK_URL`, or to `LEAD_WEBHOOK_URL` if that is blank, with `"type": "partner_application"`, the chosen `plan` (`lead-pack`, `priority`, or `unsure`), and a `seatStatus` for Priority Placement (`seat_available` or `waitlist`).
+Contractor applications from `/contractors` POST to `/api/submit-partner`. They are forwarded to `PARTNER_WEBHOOK_URL`, or to `LEAD_WEBHOOK_URL` if that is blank, with `"type": "partner_application"`, the plan name and monthly price, and a `seatStatus` of `seat_available` or `waitlist`.
 
 Any endpoint that accepts JSON works: Zapier/Make/n8n "Catch Hook", a Slack workflow, GoHighLevel, HubSpot, or your own API. Route on the `type` field.
 
@@ -110,7 +110,7 @@ src/
     services/page.tsx                Service-area index
     services/[city]/page.tsx         Primary-trade city pages (static)
     services/[city]/[trade]/page.tsx Additional-trade city pages (static)
-    contractors/page.tsx             Growth Pack + Priority Placement plans + application
+    contractors/page.tsx             Monthly retainer offer + application
     privacy/, terms/                 Legal pages
     api/submit-lead/route.ts         Homeowner lead → webhook
     api/submit-partner/route.ts      Contractor application → webhook
@@ -141,9 +141,8 @@ Adding analytics or chat widgets will lower those scores. Load them with `next/s
 
 ## Before launch: checklist
 
-- [ ] Set real plan prices in `trades.ts` (`defaultPartnerPlans`): the Growth Pack is a **$450** placeholder and Priority Placement is a **$597/mo** placeholder
-- [ ] Set `priority.seatsOpen` as Priority seats fill
-- [ ] Confirm the bad-lead credit policy listed in the Growth Pack features matches how you'll operate
+- [ ] Set the real retainer price in `trades.ts` (`defaultPartnerPlan.monthlyPrice` is a **$597/mo** placeholder)
+- [ ] Lower `seatsOpen` as seats fill (at 0 the site switches to "Join the Waitlist")
 - [ ] Have a Missouri attorney review `/privacy` and `/terms`, including TCPA consent wording for calls and texts
 - [ ] Connect `LEAD_WEBHOOK_URL` and send a test lead
 - [ ] Verify the city facts (neighborhoods, landmarks, permit offices) against your local knowledge
