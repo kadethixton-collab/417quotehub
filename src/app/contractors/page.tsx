@@ -3,6 +3,7 @@ import { site } from "@/config/site";
 import { cities } from "@/config/cities";
 import { activeTrades } from "@/config/trades";
 import { getPrimaryTrade } from "@/lib/content";
+import { seatAvailability } from "@/lib/routing";
 import PartnerForm from "@/components/PartnerForm";
 import FAQ from "@/components/FAQ";
 import MobileCtaBar from "@/components/MobileCtaBar";
@@ -10,17 +11,22 @@ import { Icon, type IconName } from "@/components/Icons";
 
 const trade = getPrimaryTrade();
 const plan = trade.partner;
-const open = plan.seatsOpen > 0;
+const seats = seatAvailability(trade);
+const perTerritory = plan.seatsPerTerritory;
+const totalOpen = seats.reduce((n, t) => n + t.open, 0);
+const totalSeats = seats.reduce((n, t) => n + t.total, 0);
+const fromPrice = Math.min(...seats.map((t) => t.price));
+const open = totalOpen > 0;
 
 export const metadata: Metadata = {
-  title: `Partner With Us: Only ${plan.seatsTotal} ${trade.name} Seats in the ${site.areaCode}`,
-  description: `A flat monthly retainer for ${site.areaCode} ${trade.name.toLowerCase()} contractors. Only ${plan.seatsTotal} seats per trade, no per-lead fees, and every homeowner project capped at ${site.quoteRange} quotes.`,
+  title: `Partner With Us: ${perTerritory} ${trade.name} Seats per Territory in the ${site.areaCode}`,
+  description: `A flat monthly retainer for ${site.areaCode} ${trade.name.toLowerCase()} contractors. Only ${perTerritory} seats per trade in each territory, no per-lead fees, and every homeowner project capped at ${site.quoteRange} quotes.`,
   alternates: { canonical: "/contractors" },
 };
 
 export default function Contractors() {
   const benefits: { icon: IconName; title: string; body: string }[] = [
-    { icon: "users", title: `Only ${plan.seatsTotal} seats per trade`, body: `We cap each trade at ${plan.seatsTotal} partner companies across the ${site.areaCode}. Once they're filled, new applicants wait.` },
+    { icon: "users", title: `Only ${perTerritory} seats per territory`, body: `Each of our ${seats.length} territories has ${perTerritory} seats per trade. Once a territory is full, new applicants wait.` },
     { icon: "dollar", title: "One flat monthly retainer", body: "No per-lead charges, no surprise invoices, no paying more in a busy month. You know your cost up front." },
     { icon: "scale", title: `${site.quoteRange} quotes max per project`, body: `Every homeowner request goes to ${site.maxQuotes} contractors at most. No racing 5–8 companies to the phone.` },
     { icon: "pin", title: `100% ${site.areaCode} homeowners`, body: "Requests come only from Springfield, Nixa, Ozark, Republic, Willard, Battlefield, Rogersville & nearby." },
@@ -35,11 +41,15 @@ export default function Contractors() {
     },
     {
       q: "How many contractors get each request?",
-      a: `Never more than ${site.maxQuotes}. Because there are only ${plan.seatsTotal} seats per trade, a request goes to the partners who serve that homeowner's city, so most projects go to 2 or 3 pros. Homeowners get real choice without being overwhelmed.`,
+      a: `Never more than ${site.maxQuotes}. Each territory has only ${perTerritory} seats per trade, and a request goes only to the partners holding a seat in that homeowner's territory. Most projects go to 2 or 3 pros. Homeowners get real choice without being overwhelmed.`,
+    },
+    {
+      q: "What's a territory?",
+      a: `We split the ${site.areaCode} into ${seats.length} territories: ${seats.map((t) => t.name).join(", ")}. You pay a flat retainer for each territory you hold a seat in, and you get every request in your trade from homeowners there.`,
     },
     {
       q: "How are seats assigned?",
-      a: "First-come, first-qualified. We verify licensing/registration, insurance, and local reputation, then offer seats in the order applications are approved. Once every seat in a trade is filled, new applicants join the waitlist.",
+      a: "First-come, first-qualified. We verify licensing/registration, insurance, and local reputation, then offer seats in the order applications are approved. Once a territory's seats are filled, new applicants for that territory join the waitlist.",
     },
     {
       q: "How many requests will I get?",
@@ -58,21 +68,21 @@ export default function Contractors() {
         <div className="mx-auto max-w-6xl px-4 py-14 sm:py-20">
           <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm font-semibold text-brand-100 ring-1 ring-white/20">
             <span className={`h-2 w-2 rounded-full ${open ? "bg-emerald-400" : "bg-amber-400"}`} aria-hidden="true" />
-            {open ? `${plan.seatsOpen} of ${plan.seatsTotal} ${trade.name} seats open` : `${trade.name} seats full. Waitlist open`}
+            {open ? `${totalOpen} of ${totalSeats} ${trade.name} seats open across ${seats.length} territories` : `${trade.name} seats full. Waitlist open`}
           </span>
           <h1 className="mt-5 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">
-            {site.areaCode} {trade.name} Leads on a Flat Monthly Retainer. Only {plan.seatsTotal} Seats.
+            {site.areaCode} {trade.name} Leads on a Flat Monthly Retainer. Only {perTerritory} Seats per Territory.
           </h1>
           <p className="mt-5 max-w-2xl text-lg text-brand-100 sm:text-xl">
             No pay-per-lead. No bidding wars. No fighting 5+ competitors over the same homeowner. Every project on {site.name} is
-            capped at {site.quoteRange} quotes, and only {plan.seatsTotal} {trade.proPlural} get a seat.
+            capped at {site.quoteRange} quotes, and only {perTerritory} {trade.proPlural} per territory get a seat.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-4">
             <a href="#apply" className="rounded-xl bg-accent-500 px-7 py-4 text-lg font-extrabold text-slate-900 shadow hover:bg-accent-400">
               {open ? "Claim an Open Seat" : "Join the Waitlist"}
             </a>
             <p className="text-brand-100">
-              <span className="text-3xl font-extrabold text-white">${plan.monthlyPrice}</span>/month · flat · month-to-month
+              from <span className="text-3xl font-extrabold text-white">${fromPrice}</span>/month per territory · month-to-month
             </p>
           </div>
         </div>
@@ -86,12 +96,12 @@ export default function Contractors() {
           </h2>
           <div className="mt-8 flex flex-col rounded-2xl bg-white p-7 shadow-sm ring-2 ring-brand-600">
             <span className="self-start rounded-full bg-brand-600 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
-              {open ? `${plan.seatsOpen} of ${plan.seatsTotal} seats open` : "Waitlist"}
+              {open ? `${totalOpen} seats open` : "Waitlist"}
             </span>
             <h3 className="mt-4 text-xl font-extrabold text-slate-900">{plan.name}</h3>
             <p className="mt-3">
-              <span className="text-4xl font-black text-slate-900">${plan.monthlyPrice}</span>{" "}
-              <span className="text-slate-600">per month · flat retainer</span>
+              <span className="text-4xl font-black text-slate-900">${fromPrice}</span>{" "}
+              <span className="text-slate-600">per territory / month · flat retainer</span>
             </p>
             <ul className="mt-6 space-y-2.5 text-slate-700">
               {plan.features.map((f) => (
@@ -105,14 +115,56 @@ export default function Contractors() {
         </div>
       </section>
 
-      <section className="bg-white py-16 sm:py-20" aria-labelledby="benefits-title">
+      {/* Seats by territory */}
+      <section className="bg-white py-16 sm:py-20" aria-labelledby="seats-title">
+        <div className="mx-auto max-w-4xl px-4">
+          <h2 id="seats-title" className="text-center text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+            Open {trade.name} seats by territory
+          </h2>
+          <p className="mx-auto mt-3 max-w-2xl text-center text-slate-600">
+            Hold a seat in one territory or several. Each territory gets {perTerritory} seats per trade, and no more.
+          </p>
+          <div className="mt-8 overflow-hidden rounded-2xl border border-slate-200">
+            <table className="w-full text-left text-sm sm:text-base">
+              <caption className="sr-only">Open partner seats by territory</caption>
+              <thead className="bg-slate-50 text-slate-600">
+                <tr>
+                  <th scope="col" className="p-3 font-semibold sm:p-4">Territory</th>
+                  <th scope="col" className="p-3 font-semibold sm:p-4">Seats</th>
+                  <th scope="col" className="p-3 text-right font-semibold sm:p-4">Per month</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {seats.map((t) => (
+                  <tr key={t.territory}>
+                    <th scope="row" className="p-3 sm:p-4">
+                      <span className="block font-bold text-slate-900">{t.name}</span>
+                      <span className="block text-xs font-normal text-slate-500">{t.cities.join(", ")}</span>
+                    </th>
+                    <td className="p-3 sm:p-4">
+                      {t.open > 0 ? (
+                        <span className="font-semibold text-emerald-700">{t.open} of {t.total} open</span>
+                      ) : (
+                        <span className="font-semibold text-amber-700">Full · waitlist</span>
+                      )}
+                    </td>
+                    <td className="p-3 text-right font-bold text-slate-900 sm:p-4">${t.price}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-slate-50 py-16 sm:py-20" aria-labelledby="benefits-title">
         <div className="mx-auto max-w-6xl px-4">
           <h2 id="benefits-title" className="text-center text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
             Built for local contractors, not lead brokers
           </h2>
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {benefits.map((b) => (
-              <div key={b.title} className="rounded-2xl border border-slate-200 p-6">
+              <div key={b.title} className="rounded-2xl border border-slate-200 bg-white p-6">
                 <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700"><Icon name={b.icon} /></span>
                 <h3 className="mt-4 text-lg font-bold text-slate-900">{b.title}</h3>
                 <p className="mt-2 text-slate-600">{b.body}</p>
@@ -122,14 +174,14 @@ export default function Contractors() {
         </div>
       </section>
 
-      <section className="bg-slate-50 py-16 sm:py-20" aria-labelledby="compare-title">
+      <section className="bg-white py-16 sm:py-20" aria-labelledby="compare-title">
         <div className="mx-auto max-w-4xl px-4">
           <h2 id="compare-title" className="text-center text-3xl font-extrabold tracking-tight text-slate-900">The math is simple</h2>
           <div className="mt-8 grid gap-5 md:grid-cols-2">
             <div className="rounded-2xl bg-white p-6 ring-2 ring-brand-600">
               <h3 className="font-bold text-brand-700">{site.name} Partner</h3>
               <ul className="mt-4 space-y-2 text-slate-700">
-                {[`Shared with ${site.quoteRange} pros max`, "One flat monthly retainer", `Only ${plan.seatsTotal} seats per trade`, "Local 417 requests only"].map((t) => (
+                {[`Shared with ${site.quoteRange} pros max`, "One flat monthly retainer", `Only ${perTerritory} seats per territory`, "Local 417 requests only"].map((t) => (
                   <li key={t} className="flex gap-2"><Icon name="check" className="h-5 w-5 shrink-0 text-emerald-600" />{t}</li>
                 ))}
               </ul>
@@ -146,7 +198,7 @@ export default function Contractors() {
         </div>
       </section>
 
-      <section id="apply" className="scroll-mt-20 bg-white py-16 sm:py-20" aria-labelledby="apply-title">
+      <section id="apply" className="scroll-mt-20 bg-slate-50 py-16 sm:py-20" aria-labelledby="apply-title">
         <div className="mx-auto grid max-w-6xl gap-10 px-4 lg:grid-cols-[1fr_1.4fr]">
           <div>
             <h2 id="apply-title" className="text-3xl font-extrabold tracking-tight text-slate-900">
@@ -165,8 +217,12 @@ export default function Contractors() {
             </ol>
           </div>
           <PartnerForm
-            trades={activeTrades.map((t) => ({ slug: t.slug, name: t.name, seatsOpen: t.partner.seatsOpen }))}
-            cities={cities.map((c) => ({ slug: c.slug, name: c.name }))}
+            trades={activeTrades.map((t) => ({
+              slug: t.slug,
+              name: t.name,
+              openByTerritory: Object.fromEntries(seatAvailability(t).map((x) => [x.territory, x.open])),
+            }))}
+            cities={cities.map((c) => ({ slug: c.slug, name: c.name, territory: c.territory }))}
           />
         </div>
       </section>

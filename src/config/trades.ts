@@ -4,35 +4,62 @@
  * ───────────────────────────────────────────────────────────────────────────
  * To add a 2nd or 3rd trade:
  *   1. Copy the disabled `roofing` example at the bottom (or the concrete entry).
- *   2. Fill in project types, FAQs, local considerations, and partner pricing.
+ *   2. Fill in project types (each becomes a service page in every city), FAQs,
+ *      local considerations, and partner pricing.
  *   3. Set `enabled: true`.
  * The site automatically generates:
- *   - /services/[city]/[trade] landing pages for all 7 cities
- *   - sitemap entries, JSON-LD, and a trade option on the contractor application
- * `cityContent` is optional — without it, city pages use localized templates
- * built from cities.ts. Write custom city copy when you can; it ranks better.
+ *   - /services/[city]/[trade] hub pages for all 7 cities (non-primary trades)
+ *   - /services/[city]/[service] pages for every project type × city
+ *   - sitemap entries, JSON-LD, seat tracking, and lead routing for the trade
+ * `cityContent` and the per-service content fields are optional — without them,
+ * pages use localized templates built from cities.ts. Custom copy ranks better.
  *
  * Which trade appears on the homepage and at /services/[city] is set by
- * `primaryTradeSlug` in site.ts.
+ * `primaryTradeSlug` in site.ts. Partners (who receives leads) live in partners.ts.
+ *
+ * In service content, `{city}` and `{county}` are replaced with the page's city.
  */
 import type { IconName } from "@/components/Icons";
 
-export type ProjectType = { id: string; label: string; description: string; icon: IconName };
 export type FAQ = { q: string; a: string };
 export type Consideration = { title: string; body: string };
+
+export type ProjectType = {
+  /** Stable id sent with leads. */
+  id: string;
+  /** URL slug for the service pages — must be unique across ALL trades. */
+  slug: string;
+  label: string;
+  description: string;
+  icon: IconName;
+  /** Singular noun phrase for headlines: "Compare 2–3 Free {seoName} Quotes in Nixa". */
+  seoName: string;
+  /* Optional service-page content (fallback copy is generated when missing). */
+  intro?: string[];
+  costFactors?: string[];
+  faqs?: FAQ[];
+  /** One locally specific sentence per city slug. */
+  cityAngles?: Partial<Record<string, string>>;
+};
+
 export type CityTradeContent = {
   intro: string[];
   considerations: Consideration[];
   faqs: FAQ[];
 };
 
-/** The contractor offer: a flat monthly retainer with a limited number of seats per trade. */
+/** The contractor offer: a flat monthly retainer for a seat in one territory. */
 export type PartnerPlan = {
   name: string;
+  /** Default monthly price per territory seat. */
   monthlyPrice: number;
-  /** Seats per trade. Keep this equal to site.maxQuotes so every project can reach its full quote cap. */
-  seatsTotal: number;
-  seatsOpen: number;
+  /** Optional per-territory prices (territory slug → price), e.g. charge more for Springfield. */
+  territoryPrices?: Partial<Record<string, number>>;
+  /**
+   * Seats per territory. Keep this equal to site.maxQuotes so every project can reach
+   * its full quote cap. Open seats are calculated automatically from partners.ts.
+   */
+  seatsPerTerritory: number;
   features: string[];
 };
 
@@ -65,13 +92,13 @@ export type Trade = {
 const defaultPartnerPlan: PartnerPlan = {
   name: "Monthly Priority Placement",
   monthlyPrice: 597,
-  seatsTotal: 3,
-  seatsOpen: 3,
+  territoryPrices: {},
+  seatsPerTerritory: 3,
   features: [
-    "Every matching homeowner request in the cities you serve",
+    "Every matching homeowner request in your territory",
     "Each project shared with 2–3 pros max — never 5+",
     "No per-lead charges: one flat monthly retainer",
-    "Limited seats per trade, so no one can buy their way past you",
+    "Only 3 seats per trade in each territory",
     "Month-to-month. Cancel anytime",
   ],
 };
@@ -88,10 +115,177 @@ export const trades: Trade[] = [
     shortDescription: "Driveways, patios, sidewalks, stamped concrete, slab leveling, and garage & shop slabs.",
     notePlaceholder: "e.g. Replace a cracked 2-car driveway, about 20×40 ft, plus the front walk",
     projectTypes: [
-      { id: "driveway", label: "Concrete Driveways", description: "New & replacement", icon: "road" },
-      { id: "patio-sidewalk", label: "Patios, Sidewalks & Stamped Concrete", description: "Flatwork & decorative finishes", icon: "grid" },
-      { id: "lifting-leveling", label: "Concrete Lifting & Leveling", description: "Polyjacking sunken slabs", icon: "level" },
-      { id: "slab", label: "Garage, Basement & Shop Slabs", description: "New pours & replacements", icon: "layers" },
+      {
+        id: "driveway",
+        slug: "concrete-driveways",
+        label: "Concrete Driveways",
+        description: "New & replacement",
+        icon: "road",
+        seoName: "Concrete Driveway",
+        intro: [
+          "A concrete driveway is one of the biggest curb-appeal and resale upgrades a {city} homeowner can make, and one of the easiest projects to get wrong. In the Ozarks, the difference between a driveway that lasts 30 years and one that cracks in three usually comes down to what's underneath: excavation depth, a well-compacted gravel base, reinforcement, and properly spaced control joints.",
+          "Whether you're replacing a cracked, sunken driveway or pouring a new one, we'll match you with 2–3 vetted {city} concrete contractors so you can compare honest, itemized quotes.",
+        ],
+        costFactors: [
+          "Size and thickness (4\" for cars, 5–6\" with rebar for trucks, trailers & RVs)",
+          "Tear-out and haul-away of the old driveway or asphalt",
+          "Excavation, grading, and gravel base depth, especially on rocky or sloped lots",
+          "Reinforcement (wire mesh vs. rebar) and control-joint layout",
+          "Finish: standard broom, exposed aggregate, colored, or stamped borders",
+          "Permits for the apron where the driveway meets the street",
+        ],
+        faqs: [
+          {
+            q: "How much does a concrete driveway cost in {city}, MO?",
+            a: "It depends on size, thickness, tear-out, site prep, and finish, which is exactly why comparing 2–3 local quotes matters. Ask every contractor to itemize excavation, base, reinforcement, and finish so you can compare apples to apples.",
+          },
+          {
+            q: "Should I replace or level my {city} driveway?",
+            a: "If the slabs are sunken but mostly intact, concrete lifting (polyjacking) is often far cheaper. If the driveway is badly cracked, crumbling, or heaved by roots, replacement usually makes more sense. Your matched pros can tell you which fits.",
+          },
+          {
+            q: "How long until I can park on my new driveway?",
+            a: "Typically about 7 days for passenger cars and closer to a month for heavy trucks, trailers, or RVs. Your contractor will give exact guidance for your mix and the weather.",
+          },
+        ],
+        cityAngles: {
+          "springfield-mo": "In Springfield's older neighborhoods like Rountree and Phelps Grove, many driveways are narrow, original slabs heaved by mature tree roots. Replacement is a chance to widen and reinforce them.",
+          "nixa-mo": "Many Nixa driveways were poured during the subdivision boom over backfill that's still settling, so expect quotes to address base compaction near the garage.",
+          "ozark-mo": "Sloped Ozark lots near the Finley River often need extra grading, drainage, and a heavier broom finish for traction in ice storms.",
+          "republic-mo": "Republic homeowners frequently add a side pad for an RV, boat, or trailer at the same time. Pouring it with the driveway usually saves money.",
+          "willard-mo": "Long rural driveways around Willard often get concrete near the house and garage with gravel beyond, a smart way to control cost.",
+          "battlefield-mo": "Many Battlefield homes still have their original 1970s–90s driveways, which are now 30–50 years into Ozarks freeze-thaw.",
+          "rogersville-mo": "On Rogersville acreage, driveways often carry work trucks and trailers, so 5–6 inches with rebar is a common spec.",
+        },
+      },
+      {
+        id: "patio-sidewalk",
+        slug: "patios-sidewalks-stamped-concrete",
+        label: "Patios, Sidewalks & Stamped Concrete",
+        description: "Flatwork & decorative finishes",
+        icon: "grid",
+        seoName: "Patio, Sidewalk & Stamped Concrete",
+        intro: [
+          "A new patio, a wider front walk, or a stamped concrete entertaining area can transform how you use your {city} yard. Stamped and colored concrete can mimic flagstone, slate, brick, or wood plank for far less than the real thing, but it has to be sealed and maintained to hold up to Ozarks winters.",
+          "Tell us what you have in mind and we'll match you with 2–3 vetted {city} concrete contractors who do decorative and everyday flatwork.",
+        ],
+        costFactors: [
+          "Square footage and shape (curves and steps add labor)",
+          "Plain broom finish vs. stamped, colored, or exposed aggregate",
+          "Removal of old concrete, pavers, or sod",
+          "Grading and drainage away from the house",
+          "Sealer type and recommended resealing schedule",
+          "Add-ons like seat walls, steps, or fire-pit pads",
+        ],
+        faqs: [
+          {
+            q: "Is stamped concrete worth it in {city}?",
+            a: "For many homeowners, yes. It gives the look of stone or brick at a lower cost. In Southwest Missouri, ask about a quality sealer and resealing every few years to protect it from freeze-thaw and UV fading.",
+          },
+          {
+            q: "Do I need a permit for a patio or sidewalk in {city}?",
+            a: "Backyard patios often don't need one, but work on public sidewalks or in the right-of-way usually does. Rules vary by city, so your contractor should confirm.",
+          },
+          {
+            q: "Can a new patio be poured next to my existing slab?",
+            a: "Usually, yes. Good contractors will dowel or isolate the joint and match elevation and drainage. Ask how each one plans to tie in.",
+          },
+        ],
+        cityAngles: {
+          "springfield-mo": "Springfield homeowners often pair a new back patio with replacing a cracked original front walk, and some public sidewalk work needs a city permit.",
+          "nixa-mo": "Stamped patios are among the most popular upgrades in Nixa subdivisions. Check your HOA covenants before choosing colors or patterns.",
+          "ozark-mo": "On wooded Ozark lots, patios stay shaded and damp, so a slip-resistant sealer and good drainage matter.",
+          "republic-mo": "Many newer Republic homes came with a small builder patio that homeowners are now expanding into a full outdoor living space.",
+          "willard-mo": "Willard homeowners on acreage often add a patio plus a walkway out to a shop or detached garage.",
+          "battlefield-mo": "In Battlefield, original sidewalks and porch steps are often sunken or cracked by tree roots, making them prime candidates for replacement or leveling.",
+          "rogersville-mo": "Rogersville homeowners often bundle a back patio with walkways to outbuildings to save on mobilization costs.",
+        },
+      },
+      {
+        id: "lifting-leveling",
+        slug: "concrete-lifting-leveling",
+        label: "Concrete Lifting & Leveling",
+        description: "Polyjacking sunken slabs",
+        icon: "level",
+        seoName: "Concrete Lifting & Leveling",
+        intro: [
+          "Sunken driveways, sidewalks, patios, and garage aprons are everywhere in {city}. Clay soils shrink and swell, backfill settles, and the Springfield Plateau's karst geology lets soil wash out from under slabs. The good news is that a sunken slab doesn't always need to be torn out.",
+          "Polyjacking injects high-density foam beneath the slab through small holes to lift it back into place, usually in a few hours, and it's often ready to use the same day. We'll match you with 2–3 vetted {city} pros so you can compare leveling quotes against replacement.",
+        ],
+        costFactors: [
+          "How many slabs or panels need lifting",
+          "How far the concrete has dropped",
+          "Size of the voids beneath (more foam = higher cost)",
+          "Joint sealing and crack repair after lifting",
+          "Access, such as slabs inside garages or tight side yards",
+        ],
+        faqs: [
+          {
+            q: "What's the difference between polyjacking and mudjacking?",
+            a: "Mudjacking pumps a cement slurry under the slab. Polyjacking uses lightweight expanding foam through much smaller holes, cures in minutes, and adds less weight to already-weak soil. Many {city} contractors now prefer foam.",
+          },
+          {
+            q: "How long does concrete lifting last?",
+            a: "When the cause of settling, like drainage or washout, is addressed, lifted slabs can last many years. Ask each contractor about the warranty and what they'll do to prevent future settling.",
+          },
+          {
+            q: "Can every sunken slab be leveled?",
+            a: "Not always. Slabs that are badly broken, crumbling, or heaved by roots are usually better replaced. Your matched pros will tell you honestly which option makes sense.",
+          },
+        ],
+        cityAngles: {
+          "springfield-mo": "Sinking garage aprons and sidewalks are especially common in Springfield's mid-century ranch neighborhoods on the north and west sides.",
+          "nixa-mo": "In Nixa subdivisions, settling near the garage and front porch is often caused by backfill that was never fully compacted when the home was built.",
+          "ozark-mo": "On sloped Ozark lots, runoff can wash soil from beneath walks and patios, so fixing drainage is often part of the job.",
+          "republic-mo": "Disturbed soil on newer Republic lots can keep settling for years, which makes leveling a common fix for 5–15 year-old homes.",
+          "willard-mo": "Willard homeowners often use leveling on sunken shop aprons and sidewalks that carry heavy equipment.",
+          "battlefield-mo": "Battlefield's established streets have plenty of tilted sidewalk panels and porch steps that are trip hazards, ideal candidates for lifting.",
+          "rogersville-mo": "In Rogersville, leveling sunken slabs around garages and outbuildings is often far cheaper than tearing out and repouring.",
+        },
+      },
+      {
+        id: "slab",
+        slug: "garage-basement-shop-slabs",
+        label: "Garage, Basement & Shop Slabs",
+        description: "New pours & replacements",
+        icon: "layers",
+        seoName: "Garage, Basement & Shop Slab",
+        intro: [
+          "Whether it's a new garage floor, a basement slab, or a 40×60 shop floor that has to carry trucks and equipment, structural slabs in {city} need to be built right from the ground up: proper excavation, a compacted base, a vapor barrier, reinforcement, and the right thickness for the load.",
+          "Not every concrete crew handles big structural pours. We'll match you with 2–3 vetted {city} contractors who do.",
+        ],
+        costFactors: [
+          "Slab size and thickness (heavier loads need 5–6\"+ with rebar)",
+          "Site prep, excavation, and gravel base",
+          "Vapor barrier (especially for basements and heated shops)",
+          "Reinforcement, thickened edges, and footings",
+          "Floor drains, in-floor heat tubing, or lift pads",
+          "Finish: smooth trowel, sealed, or ready for epoxy",
+        ],
+        faqs: [
+          {
+            q: "How thick should a shop or garage slab be in {city}?",
+            a: "A typical garage floor is about 4 inches, while shops that carry trucks, tractors, or lifts often need 5–6 inches or more with rebar. Tell your matched pros what will sit on the slab so they can quote the right spec.",
+          },
+          {
+            q: "Do I need a vapor barrier?",
+            a: "For basements and any heated or finished space, it's strongly recommended. It keeps ground moisture from wicking up through the slab. Ask each contractor what they include.",
+          },
+          {
+            q: "Can I get my shop slab and driveway quoted together?",
+            a: "Yes. Mention both in your project note and your matched contractors can quote everything in one visit, which often lowers the total.",
+          },
+        ],
+        cityAngles: {
+          "springfield-mo": "In Springfield, garage slab replacements are common in older homes where original floors have cracked, sunk, or pitted from decades of road salt.",
+          "nixa-mo": "Nixa homeowners often add a detached garage or workshop, and HOA or city setback rules may apply.",
+          "ozark-mo": "Rocky ground around Ozark can affect excavation for shop slabs, so make sure rock removal is spelled out in every quote.",
+          "republic-mo": "Republic homeowners building RV garages or larger shops need thicker, reinforced slabs to carry the weight.",
+          "willard-mo": "Shop and barn slabs are among the most common big pours around Willard's rural acreage.",
+          "battlefield-mo": "Many Battlefield garages have original floors that are cracked or pitted, and replacement is often paired with a new apron.",
+          "rogersville-mo": "Rogersville properties along US-60 and Highway 125 frequently need large shop and equipment slabs. Tell us the dimensions in your note.",
+        },
+      },
     ],
     localConsiderations: [
       {
@@ -381,10 +575,10 @@ export const trades: Trade[] = [
     shortDescription: "Roof replacement, storm & hail damage, leak repair, and gutters.",
     notePlaceholder: "e.g. Hail last spring, some missing shingles on the north side",
     projectTypes: [
-      { id: "replacement", label: "Full Roof Replacement", description: "Tear-off & new roof", icon: "home" },
-      { id: "repair", label: "Leak or Roof Repair", description: "Missing shingles, leaks, flashing", icon: "wrench" },
-      { id: "storm", label: "Hail / Storm Damage", description: "Inspection & insurance claim help", icon: "storm" },
-      { id: "gutters", label: "Gutters & Downspouts", description: "New, repair, or guards", icon: "droplet" },
+      { id: "replacement", slug: "roof-replacement", seoName: "Roof Replacement", label: "Full Roof Replacement", description: "Tear-off & new roof", icon: "home" },
+      { id: "repair", slug: "roof-repair", seoName: "Roof Repair", label: "Leak or Roof Repair", description: "Missing shingles, leaks, flashing", icon: "wrench" },
+      { id: "storm", slug: "hail-storm-roof-damage", seoName: "Hail & Storm Roof Damage", label: "Hail / Storm Damage", description: "Inspection & insurance claim help", icon: "storm" },
+      { id: "gutters", slug: "gutters-downspouts", seoName: "Gutter & Downspout", label: "Gutters & Downspouts", description: "New, repair, or guards", icon: "droplet" },
     ],
     localConsiderations: [
       {

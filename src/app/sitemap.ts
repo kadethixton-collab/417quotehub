@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { site } from "@/config/site";
 import { cities } from "@/config/cities";
 import { activeTrades } from "@/config/trades";
-import { cityHref } from "@/lib/content";
+import { cityHref, serviceHref } from "@/lib/content";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
@@ -14,7 +14,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/terms", priority: 0.2 },
   ];
   const cityPages = activeTrades.flatMap((t) => cities.map((c) => ({ path: cityHref(c, t), priority: 0.9 })));
-  return [...staticPages, ...cityPages].map(({ path, priority }) => ({
+  const servicePages = activeTrades.flatMap((t) =>
+    cities.flatMap((c) => t.projectTypes.map((p) => ({ path: serviceHref(c, p), priority: 0.8 }))),
+  );
+  return [...staticPages, ...cityPages, ...servicePages].map(({ path, priority }) => ({
     url: `${site.url}${path === "/" ? "" : path}`,
     lastModified: now,
     changeFrequency: "monthly",

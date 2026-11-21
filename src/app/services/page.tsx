@@ -3,7 +3,7 @@ import Link from "next/link";
 import { site } from "@/config/site";
 import { cities } from "@/config/cities";
 import { activeTrades } from "@/config/trades";
-import { cityHref } from "@/lib/content";
+import { cityHref, serviceHref } from "@/lib/content";
 import { Icon } from "@/components/Icons";
 
 export const metadata: Metadata = {
@@ -34,6 +34,13 @@ export default function ServicesIndex() {
                     <Link href={cityHref(c, t)} className="inline-flex items-center gap-1 font-semibold text-brand-700 hover:underline">
                       {t.name} quotes in {c.name} <Icon name="arrowRight" className="h-4 w-4" />
                     </Link>
+                    <ul className="mt-1 space-y-1 border-l border-slate-200 pl-3 text-sm">
+                      {t.projectTypes.map((p) => (
+                        <li key={p.slug}>
+                          <Link href={serviceHref(c, p)} className="text-slate-600 hover:text-brand-700 hover:underline">{p.label}</Link>
+                        </li>
+                      ))}
+                    </ul>
                   </li>
                 ))}
               </ul>

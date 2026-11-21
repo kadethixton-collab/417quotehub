@@ -3,9 +3,25 @@
  * Trade-specific copy for a city lives in trades.ts (`cityContent`), and falls back
  * to templates built from these facts when a trade hasn't written custom copy yet.
  */
+/**
+ * Territories are the "rentable" areas. Contractor seats are sold per trade, per territory,
+ * and leads are routed to the partners who hold a seat in the homeowner's territory.
+ */
+export type Territory = { slug: string; name: string };
+
+export const territories: Territory[] = [
+  { slug: "springfield", name: "Springfield" },
+  { slug: "christian-county", name: "Nixa & Ozark" },
+  { slug: "sw-greene", name: "Republic & Battlefield" },
+  { slug: "north-greene", name: "Willard" },
+  { slug: "east-417", name: "Rogersville" },
+];
+
 export type City = {
   slug: string;
   name: string;
+  /** Territory slug (see `territories` above). */
+  territory: string;
   county: string;
   zips: string[];
   /** Neighborhoods, subdivisions, and corridors locals will recognize. */
@@ -24,6 +40,7 @@ export const cities: City[] = [
   {
     slug: "springfield-mo",
     name: "Springfield",
+    territory: "springfield",
     county: "Greene County",
     zips: ["65802", "65803", "65804", "65806", "65807", "65809", "65810"],
     neighborhoods: [
@@ -52,6 +69,7 @@ export const cities: City[] = [
   {
     slug: "nixa-mo",
     name: "Nixa",
+    territory: "christian-county",
     county: "Christian County",
     zips: ["65714"],
     neighborhoods: [
@@ -71,6 +89,7 @@ export const cities: City[] = [
   {
     slug: "ozark-mo",
     name: "Ozark",
+    territory: "christian-county",
     county: "Christian County",
     zips: ["65721"],
     neighborhoods: [
@@ -90,6 +109,7 @@ export const cities: City[] = [
   {
     slug: "republic-mo",
     name: "Republic",
+    territory: "sw-greene",
     county: "Greene County",
     zips: ["65738"],
     neighborhoods: [
@@ -109,6 +129,7 @@ export const cities: City[] = [
   {
     slug: "willard-mo",
     name: "Willard",
+    territory: "north-greene",
     county: "Greene County",
     zips: ["65781"],
     neighborhoods: [
@@ -127,6 +148,7 @@ export const cities: City[] = [
   {
     slug: "battlefield-mo",
     name: "Battlefield",
+    territory: "sw-greene",
     county: "Greene County",
     zips: ["65619"],
     neighborhoods: [
@@ -145,6 +167,7 @@ export const cities: City[] = [
   {
     slug: "rogersville-mo",
     name: "Rogersville",
+    territory: "east-417",
     county: "Webster & Greene Counties",
     zips: ["65742"],
     neighborhoods: [
@@ -163,3 +186,5 @@ export const cities: City[] = [
 ];
 
 export const cityBySlug = (slug: string) => cities.find((c) => c.slug === slug);
+export const territoryBySlug = (slug: string) => territories.find((t) => t.slug === slug);
+export const citiesInTerritory = (slug: string) => cities.filter((c) => c.territory === slug);

@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { site } from "@/config/site";
-import { cities } from "@/config/cities";
+import { territoryBySlug } from "@/config/cities";
 import { tradeBySlug } from "@/config/trades";
 import { TIMELINES, normalizePhone, validateLead, type LeadInput } from "@/lib/lead";
 import { forwardToWebhook } from "@/lib/webhook";
+import { matchPartners, resolveCity } from "@/lib/routing";
 
 export const runtime = "nodejs";
 
@@ -50,7 +51,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, errors }, { status: 422 });
   }
 
-  const city = cities.find((c) => c.slug === input.city);
+  const city = resolveCity(input.city, input.zip);
+  const territory = city ? territoryBySlug(city.territory) : undefined;
+  const matched = matchPartners(trade!.slug, territory?.slug);
   const lead = {
     type: "homeowner_lead",
     leadId: crypto.randomUUID(),
@@ -65,6 +68,8 @@ export async function POST(req: Request) {
     timelineLabel: timeline!.label,
     city: city?.name ?? "Other 417",
     citySlug: city?.slug ?? "other",
+    territory: territory?.slug ?? null,
+    territoryName: territory?.name ?? null,
     zip: input.zip,
     fullName: input.fullName,
     phone: normalizePhone(input.phone),
@@ -74,6 +79,9 @@ export async function POST(req: Request) {
     consentText: `I agree to be contacted by up to ${site.maxQuotes} local contractors by phone, text, or email about my project.`,
     sourcePage: input.sourcePage || null,
     userAgent: req.headers.get("user-agent"),
+    // Routing: the partners (max site.maxQuotes) who hold a seat in this trade + territory.
+    routing: matched.length ? "auto" : "manual",
+    matchedPartners: matched.map((p) => ({ id: p.id, company: p.company, phone: p.phone, email: p.email })),
   };
 
   const result = await forwardToWebhook(process.env.LEAD_WEBHOOK_URL, "lead", lead);
@@ -83,5 +91,18 @@ export async function POST(req: Request) {
       { status: 502 },
     );
   }
-  return NextResponse.json({ ok: true, leadId: lead.leadId });
+  // Deliver to each matched partner's own webhook, if they have one. Failures are logged,
+  // not shown to the homeowner — the main webhook above already has the full lead.
+  await Promise.allSettled(
+    matched
+      .filter((p) => p.webhookUrl)
+      .map((p) => forwardToWebhook(p.webhookUrl, `lead→${p.id}`, { ...lead, deliveredTo: p.id })),
+  );
+
+  return NextResponse.json({
+    ok: true,
+    leadId: lead.leadId,
+    // Company names only — shown on the success screen so homeowners recognize the calls.
+    matched: matched.map((p) => p.company),
+  });
 }

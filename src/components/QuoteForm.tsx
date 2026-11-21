@@ -19,6 +19,8 @@ type Props = {
   cities: CityOption[];
   /** Pre-select a city (used on city landing pages). */
   defaultCity?: string;
+  /** Pre-select a project type and start on step 2 (used on service pages). */
+  defaultProjectType?: string;
   brandName: string;
   maxQuotes: number;
   quoteRange: string;
@@ -26,9 +28,11 @@ type Props = {
 
 const STEPS = ["Project", "Timeline", "Location", "Contact"] as const;
 
-export default function QuoteForm({ trade, cities, defaultCity, brandName, maxQuotes, quoteRange }: Props) {
-  const [step, setStep] = useState(0);
-  const [projectType, setProjectType] = useState("");
+export default function QuoteForm({ trade, cities, defaultCity, defaultProjectType, brandName, maxQuotes, quoteRange }: Props) {
+  const presetType = trade.projectTypes.some((p) => p.id === defaultProjectType) ? defaultProjectType! : "";
+  const [step, setStep] = useState(presetType ? 1 : 0);
+  const [projectType, setProjectType] = useState(presetType);
+  const [matched, setMatched] = useState<string[]>([]);
   const [timeline, setTimeline] = useState("");
   const [city, setCity] = useState(defaultCity ?? "");
   const [zip, setZip] = useState(() => {
@@ -126,6 +130,7 @@ export default function QuoteForm({ trade, cities, defaultCity, brandName, maxQu
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.ok) {
+        setMatched(Array.isArray(data.matched) ? data.matched : []);
         setStatus("done");
         return;
       }
@@ -150,10 +155,23 @@ export default function QuoteForm({ trade, cities, defaultCity, brandName, maxQu
         <p className="mt-3 text-lg text-slate-700">
           Expect calls/texts from up to {maxQuotes} local 417 pros shortly.
         </p>
+        {matched.length > 0 && (
+          <div className="mt-5 rounded-xl bg-brand-50 p-4 text-left ring-1 ring-brand-100">
+            <p className="text-sm font-semibold text-slate-900">Your matched local pros:</p>
+            <ul className="mt-2 space-y-1">
+              {matched.map((m) => (
+                <li key={m} className="flex items-center gap-2 font-bold text-brand-800">
+                  <Icon name="shield" className="h-5 w-5 shrink-0 text-emerald-600" /> {m}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-xs text-slate-600">Save these names so you recognize their calls and texts.</p>
+          </div>
+        )}
         <ul className="mt-6 space-y-2 text-left text-sm text-slate-600">
           <li className="flex gap-2"><Icon name="check" className="h-5 w-5 shrink-0 text-emerald-600" /> Most homeowners hear back within one business day.</li>
           <li className="flex gap-2"><Icon name="check" className="h-5 w-5 shrink-0 text-emerald-600" /> Your info goes to {maxQuotes} pros max — never a call center.</li>
-          <li className="flex gap-2"><Icon name="check" className="h-5 w-5 shrink-0 text-emerald-600" /> Compare both quotes. There&apos;s zero obligation to hire.</li>
+          <li className="flex gap-2"><Icon name="check" className="h-5 w-5 shrink-0 text-emerald-600" /> Compare your quotes. There&apos;s zero obligation to hire.</li>
         </ul>
       </div>
     );

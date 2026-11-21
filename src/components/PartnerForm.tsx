@@ -5,8 +5,9 @@ import { formatPhone, validatePartner, type FieldErrors, type PartnerInput } fro
 import { Icon } from "./Icons";
 
 type Props = {
-  trades: { slug: string; name: string; seatsOpen: number }[];
-  cities: { slug: string; name: string }[];
+  /** Open seats per territory for each trade. */
+  trades: { slug: string; name: string; openByTerritory: Record<string, number> }[];
+  cities: { slug: string; name: string; territory: string }[];
 };
 
 export default function PartnerForm({ trades, cities }: Props) {
@@ -33,7 +34,12 @@ export default function PartnerForm({ trades, cities }: Props) {
     if (errors[k as string]) setErrors(({ [k as string]: _omit, ...rest }) => rest);
   };
   const selectedTrade = trades.find((t) => t.slug === form.trade);
-  const waitlist = selectedTrade ? selectedTrade.seatsOpen <= 0 : false;
+  const isFull = (citySlug: string) => {
+    const c = cities.find((x) => x.slug === citySlug);
+    return !!selectedTrade && !!c && (selectedTrade.openByTerritory[c.territory] ?? 0) <= 0;
+  };
+  // Waitlist only when every city the applicant serves is in a territory with no open seats.
+  const waitlist = form.serviceCities.length > 0 && form.serviceCities.every(isFull);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -72,7 +78,7 @@ export default function PartnerForm({ trades, cities }: Props) {
         <h3 className="text-2xl font-extrabold text-slate-900">Application received!</h3>
         <p className="mt-2 text-slate-600">
           {seatStatus === "waitlist"
-            ? "All seats in your trade are currently filled, so you're on the waitlist. We'll reach out the moment a seat opens."
+            ? "All seats in the territories you serve are currently filled, so you're on the waitlist. We'll reach out the moment a seat opens."
             : "We'll review your company and reach out within 2 business days to verify your details and get you set up."}
         </p>
       </div>
@@ -113,7 +119,7 @@ export default function PartnerForm({ trades, cities }: Props) {
             {trades.length > 1 && <option value="">Select…</option>}
             {trades.map((t) => (
               <option key={t.slug} value={t.slug}>
-                {t.name} — {t.seatsOpen > 0 ? `${t.seatsOpen} seat${t.seatsOpen === 1 ? "" : "s"} open` : "waitlist"}
+                {t.name}
               </option>
             ))}
           </select>
@@ -148,6 +154,7 @@ export default function PartnerForm({ trades, cities }: Props) {
                   }
                 />
                 {c.name}
+                {isFull(c.slug) && <span className="ml-auto text-xs font-semibold text-amber-700">Full</span>}
               </label>
             );
           })}

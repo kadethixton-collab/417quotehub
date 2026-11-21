@@ -7,8 +7,9 @@ import FAQ from "@/components/FAQ";
 import MobileCtaBar from "@/components/MobileCtaBar";
 import JsonLd from "@/components/JsonLd";
 import CtaBand from "@/components/CtaBand";
+import ServicesGrid from "@/components/ServicesGrid";
 import { site } from "@/config/site";
-import { cities } from "@/config/cities";
+import { cities, cityBySlug } from "@/config/cities";
 import { generalFaqs, getPrimaryTrade } from "@/lib/content";
 
 const trade = getPrimaryTrade();
@@ -60,6 +61,7 @@ export default function Home() {
           </>
         }
       />
+      <ServicesGrid trade={trade} city={cityBySlug("springfield-mo") ?? cities[0]} title={`Popular ${trade.subject} projects in Springfield & the ${site.areaCode}`} />
       <HowItWorks trade={trade} />
       <Comparison trade={trade} />
       <ServiceAreaGrid trade={trade} />

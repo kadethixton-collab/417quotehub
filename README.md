@@ -44,11 +44,32 @@ Everything about a trade lives in **one file: `src/config/trades.ts`**.
 
 You get these automatically:
 
-- `/services/[city]/[trade]` pages for all 7 cities, statically generated with meta tags and JSON-LD
+- `/services/[city]/[trade]` hub pages and `/services/[city]/[service]` pages for all 7 cities, statically generated with meta tags and JSON-LD
 - Sitemap entries, plus links on `/services`
 - The trade in the contractor application's dropdown
 
 `cityContent` is optional. Without it, city pages use localized templates built from `cities.ts`. Custom copy per city ranks better, so write it when you can (see concrete for examples).
+
+## Territories, partners & lead routing
+
+This is a rank-and-rent model: you own the site and its rankings, and contractors rent **seats** for a flat monthly retainer.
+
+- **Territories** (`src/config/cities.ts`): the 7 cities are grouped into 5 rentable territories: Springfield · Nixa & Ozark · Republic & Battlefield · Willard · Rogersville.
+- **Seats** (`src/config/trades.ts`): each trade has `seatsPerTerritory` seats (3, matching the quote cap) at `monthlyPrice` per territory. Use `territoryPrices` to charge more in a bigger market, e.g. `{ springfield: 797 }`.
+- **Partners** (`src/config/partners.ts`): when a contractor pays, add them with the trade and territories they hold. That's all it takes:
+  - every homeowner lead in their trade and territory includes them in `matchedPartners` (up to 3 per lead),
+  - the open-seat table on `/contractors` updates and switches to "waitlist" when a territory is full,
+  - homeowners see the partner's company name on the "You're Matched!" screen, so they pick up the call,
+  - if the partner has a `webhookUrl`, each lead is also POSTed straight to it (for example a Zapier hook that texts them).
+- Set `active: false` to pause a partner who stops paying. Their seat reopens and their leads stop.
+- Leads with no partner in their territory arrive with `"routing": "manual"` so you can handle them yourself or use them to sell that territory's seats.
+
+## Pages
+
+Each trade generates:
+
+- `/services/[city]`: city hub page (7)
+- `/services/[city]/[service]`: one page per project type per city (4 × 7 = 28). These target searches like "concrete driveway Nixa" or "concrete leveling Springfield". The form on each one starts with the service already selected, which skips a step.
 
 ## Lead delivery (webhook)
 
@@ -69,6 +90,8 @@ The quote form POSTs to `/api/submit-lead`. The route validates the request on t
   "timelineLabel": "ASAP",
   "city": "Nixa",
   "citySlug": "nixa-mo",
+  "territory": "christian-county",
+  "territoryName": "Nixa & Ozark",
   "zip": "65714",
   "fullName": "Jane Doe",
   "phone": "4175551234",
@@ -77,7 +100,11 @@ The quote form POSTs to `/api/submit-lead`. The route validates the request on t
   "consent": true,
   "consentText": "I agree to be contacted by up to 3 local contractors…",
   "sourcePage": "/services/nixa-mo",
-  "userAgent": "…"
+  "userAgent": "…",
+  "routing": "auto",
+  "matchedPartners": [
+    { "id": "ozark-concrete-co", "company": "Ozark Concrete Co.", "phone": "4175550100", "email": "office@example.com" }
+  ]
 }
 ```
 
@@ -109,7 +136,7 @@ src/
     page.tsx                         Homepage
     services/page.tsx                Service-area index
     services/[city]/page.tsx         Primary-trade city pages (static)
-    services/[city]/[trade]/page.tsx Additional-trade city pages (static)
+    services/[city]/[slug]/page.tsx  Service × city pages + additional-trade hubs (static)
     contractors/page.tsx             Monthly retainer offer + application
     privacy/, terms/                 Legal pages
     api/submit-lead/route.ts         Homeowner lead → webhook
@@ -123,6 +150,7 @@ src/
   config/
     site.ts                          Brand + global settings
     trades.ts                        ← add trades here
+    partners.ts                      ← add paying contractors here
     cities.ts                        Local facts per city
   lib/
     lead.ts                          Shared client/server validation
@@ -142,7 +170,7 @@ Adding analytics or chat widgets will lower those scores. Load them with `next/s
 ## Before launch: checklist
 
 - [ ] Set the real retainer price in `trades.ts` (`defaultPartnerPlan.monthlyPrice` is a **$597/mo** placeholder)
-- [ ] Lower `seatsOpen` as seats fill (at 0 the site switches to "Join the Waitlist")
+- [ ] Add each paying contractor to `src/config/partners.ts`. Seats and routing update automatically
 - [ ] Have a Missouri attorney review `/privacy` and `/terms`, including TCPA consent wording for calls and texts
 - [ ] Connect `LEAD_WEBHOOK_URL` and send a test lead
 - [ ] Verify the city facts (neighborhoods, landmarks, permit offices) against your local knowledge

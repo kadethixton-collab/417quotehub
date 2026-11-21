@@ -11,6 +11,7 @@ import FAQ from "./FAQ";
 import CtaBand from "./CtaBand";
 import MobileCtaBar from "./MobileCtaBar";
 import JsonLd from "./JsonLd";
+import ServicesGrid from "./ServicesGrid";
 import { Icon } from "./Icons";
 
 export function cityMetadata(trade: Trade, city: City): Metadata {
@@ -109,8 +110,10 @@ export default function CityLanding({ trade, city }: { trade: Trade; city: City 
         }
       />
 
+      <ServicesGrid trade={trade} city={city} />
+
       {/* Local intro */}
-      <section className="bg-white py-16 sm:py-20" aria-labelledby="local-title">
+      <section className="bg-slate-50 py-16 sm:py-20" aria-labelledby="local-title">
         <div className="mx-auto grid max-w-6xl gap-10 px-4 lg:grid-cols-[1.5fr_1fr]">
           <div>
             <p className="text-sm font-bold uppercase tracking-widest text-brand-700">{city.county}</p>
@@ -121,7 +124,7 @@ export default function CityLanding({ trade, city }: { trade: Trade; city: City 
               {content.intro.map((p) => <p key={p.slice(0, 40)}>{p}</p>)}
             </div>
           </div>
-          <aside className="rounded-2xl bg-slate-50 p-6 ring-1 ring-slate-200">
+          <aside className="rounded-2xl bg-white p-6 ring-1 ring-slate-200">
             <h3 className="font-bold text-slate-900">Areas we serve in {city.name}</h3>
             <ul className="mt-3 space-y-1.5 text-slate-700">
               {city.neighborhoods.map((n) => (
@@ -137,7 +140,7 @@ export default function CityLanding({ trade, city }: { trade: Trade; city: City 
       </section>
 
       {/* Considerations */}
-      <section className="bg-slate-50 py-16 sm:py-20" aria-labelledby="consider-title">
+      <section className="bg-white py-16 sm:py-20" aria-labelledby="consider-title">
         <div className="mx-auto max-w-6xl px-4">
           <h2 id="consider-title" className="text-3xl font-extrabold tracking-tight text-slate-900">
             {city.name} {trade.name} Projects: What to Know Before You Hire
@@ -153,7 +156,7 @@ export default function CityLanding({ trade, city }: { trade: Trade; city: City 
           <h3 className="mt-12 text-xl font-bold text-slate-900">Southwest Missouri factors every {city.name} homeowner should consider</h3>
           <div className="mt-5 grid gap-5 md:grid-cols-2">
             {trade.localConsiderations.map((c) => (
-              <div key={c.title} className="flex gap-4 rounded-2xl bg-white p-6 ring-1 ring-slate-200">
+              <div key={c.title} className="flex gap-4 rounded-2xl bg-slate-50 p-6 ring-1 ring-slate-200">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700"><Icon name="shield" className="h-5 w-5" /></span>
                 <div>
                   <h4 className="font-semibold text-slate-900">{c.title}</h4>

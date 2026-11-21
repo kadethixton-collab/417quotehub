@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { site } from "@/config/site";
 import { cities } from "@/config/cities";
 import { tradeBySlug } from "@/config/trades";
+import { seatAvailability } from "@/lib/routing";
 import { normalizePhone, validatePartner, type PartnerInput } from "@/lib/lead";
 import { forwardToWebhook } from "@/lib/webhook";
 
@@ -41,6 +42,9 @@ export async function POST(req: Request) {
   if (!trade) errors.trade = "Unknown trade.";
   if (Object.keys(errors).length) return NextResponse.json({ ok: false, errors }, { status: 422 });
 
+  const wanted = new Set(input.serviceCities.map((s) => cities.find((c) => c.slug === s)!.territory));
+  const requested = seatAvailability(trade!).filter((t) => wanted.has(t.territory));
+
   const application = {
     type: "partner_application",
     applicationId: crypto.randomUUID(),
@@ -49,8 +53,9 @@ export async function POST(req: Request) {
     trade: trade!.slug,
     tradeName: trade!.name,
     plan: trade!.partner.name,
-    monthlyPrice: trade!.partner.monthlyPrice,
-    seatStatus: trade!.partner.seatsOpen > 0 ? "seat_available" : "waitlist",
+    // Seats are sold per territory; report availability for each territory the applicant serves.
+    territories: requested.map((t) => ({ territory: t.territory, name: t.name, seatsOpen: t.open, monthlyPrice: t.price })),
+    seatStatus: requested.some((t) => t.open > 0) ? "seat_available" : "waitlist",
     companyName: input.companyName,
     contactName: input.contactName,
     phone: normalizePhone(input.phone),

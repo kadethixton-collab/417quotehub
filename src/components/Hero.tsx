@@ -9,10 +9,11 @@ type Props = {
   headline: React.ReactNode;
   subheadline: React.ReactNode;
   defaultCity?: string;
+  defaultProjectType?: string;
   eyebrow?: React.ReactNode;
 };
 
-export default function Hero({ trade, headline, subheadline, defaultCity, eyebrow }: Props) {
+export default function Hero({ trade, headline, subheadline, defaultCity, defaultProjectType, eyebrow }: Props) {
   const cityOptions = cities.map(({ slug, name, zips }) => ({ slug, name, zips }));
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-brand-900 via-brand-800 to-slate-900 text-white">
@@ -37,9 +38,10 @@ export default function Hero({ trade, headline, subheadline, defaultCity, eyebro
         </div>
         <div id="quote" className="scroll-mt-20 text-slate-900">
           <QuoteForm
-            trade={{ slug: trade.slug, name: trade.name, proPlural: trade.proPlural, projectTypes: trade.projectTypes, notePlaceholder: trade.notePlaceholder }}
+            trade={{ slug: trade.slug, name: trade.name, proPlural: trade.proPlural, projectTypes: trade.projectTypes.map(({ id, slug, label, description, icon, seoName }) => ({ id, slug, label, description, icon, seoName })), notePlaceholder: trade.notePlaceholder }}
             cities={cityOptions}
             defaultCity={defaultCity}
+            defaultProjectType={defaultProjectType}
             brandName={site.name}
             maxQuotes={site.maxQuotes}
             quoteRange={site.quoteRange}

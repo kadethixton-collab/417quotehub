@@ -1,6 +1,6 @@
 import { site } from "@/config/site";
 import { cities, type City } from "@/config/cities";
-import { activeTrades, tradeBySlug, type CityTradeContent, type FAQ, type Trade } from "@/config/trades";
+import { activeTrades, tradeBySlug, type CityTradeContent, type FAQ, type ProjectType, type Trade } from "@/config/trades";
 
 export function getPrimaryTrade(): Trade {
   const t = tradeBySlug(site.primaryTradeSlug) ?? activeTrades[0];
@@ -13,6 +13,45 @@ export function cityHref(city: City, trade: Trade = getPrimaryTrade()) {
   return trade.slug === site.primaryTradeSlug
     ? `/services/${city.slug}`
     : `/services/${city.slug}/${trade.slug}`;
+}
+
+/** URL for a service × city page. Service slugs are unique across trades. */
+export function serviceHref(city: City, service: ProjectType) {
+  return `/services/${city.slug}/${service.slug}`;
+}
+
+/** Find a service (project type) of any active trade by its URL slug. */
+export function findService(slug: string): { trade: Trade; service: ProjectType } | undefined {
+  for (const trade of activeTrades) {
+    const service = trade.projectTypes.find((p) => p.slug === slug);
+    if (service) return { trade, service };
+  }
+  return undefined;
+}
+
+/** Replace {city} / {county} tokens in config copy. */
+export const fill = (text: string, city: City) => text.replaceAll("{city}", city.name).replaceAll("{county}", city.county);
+
+export type ServiceCityContent = { intro: string[]; costFactors: string[]; faqs: FAQ[] };
+
+/** Service-page copy for a city, with localized fallbacks when the config has none. */
+export function serviceCityContent(trade: Trade, service: ProjectType, city: City): ServiceCityContent {
+  const intro = (service.intro ?? [
+    `Looking for ${service.seoName.toLowerCase()} quotes in {city}? Southwest Missouri's clay soils, freeze-thaw winters, and hot, humid summers all affect how ${trade.subject} projects should be done, so it pays to hire local.`,
+    `We'll match you with ${site.quoteRange} vetted {city} ${trade.proPlural} so you can compare honest quotes without the spam calls.`,
+  ]).map((p) => fill(p, city));
+  const angle = service.cityAngles?.[city.slug];
+  if (angle) intro.splice(1, 0, angle);
+  return {
+    intro,
+    costFactors: service.costFactors ?? ["Project size and scope", "Materials and finish", "Site access and prep", "Permits, if required"],
+    faqs: (service.faqs ?? [
+      {
+        q: `How much does ${service.seoName.toLowerCase()} work cost in {city}, MO?`,
+        a: `Prices vary with scope, materials, and site conditions, which is why comparing ${site.quoteRange} local quotes is the best way to know you're paying a fair price.`,
+      },
+    ]).map((f) => ({ q: fill(f.q, city), a: fill(f.a, city) })),
+  };
 }
 
 const listify = (items: string[]) =>
@@ -31,7 +70,7 @@ export function cityTradeContent(trade: Trade, city: City): CityTradeContent {
     considerations: [
       {
         title: `Permits in ${city.name}`,
-        body: `Many ${trade.subject} projects require a permit through ${city.permitAuthority}. Ask both ${trade.proPlural} whether permit fees are included in their quote.`,
+        body: `Many ${trade.subject} projects require a permit through ${city.permitAuthority}. Ask each of your matched ${trade.proPlural} whether permit fees are included in their quote.`,
       },
       {
         title: `Local pros who know ${city.county}`,
