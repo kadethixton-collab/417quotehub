@@ -115,6 +115,11 @@ Contractor applications from `/contractors` POST to `/api/submit-partner`. They 
 
 Any endpoint that accepts JSON works: Zapier/Make/n8n "Catch Hook", a Slack workflow, GoHighLevel, HubSpot, or your own API. Route on the `type` field.
 
+## Guides & marketing
+
+- **Homeowner guides** (`src/config/guides.ts`): long-form articles at `/guides/[slug]` that rank for research searches and send readers to the matching service page. Add an article by appending to the list; the page, sitemap entry and Article schema are generated automatically.
+- **Launch kit** (`marketing/launch-kit.md`): copy-paste Facebook and Nextdoor posts, reply templates, directory listings, a partner link-request email with badge code, and a 10-minute weekly routine.
+
 ## Google Sheet lead log (free): emails partners, builds your monthly report
 
 `integrations/google-sheets/Code.gs` is a Google Apps Script that turns a Google Sheet into your lead back office, with no Zapier or paid tools. For every request it:

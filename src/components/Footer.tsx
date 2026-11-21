@@ -35,6 +35,7 @@ export default function Footer() {
             <h2 className="text-sm font-bold uppercase tracking-wide text-white">Company</h2>
             <ul className="mt-3 space-y-2 text-sm">
               <li><Link href="/#how-it-works" className="hover:text-white">How It Works</Link></li>
+              <li><Link href="/guides" className="hover:text-white">Homeowner Guides</Link></li>
               <li><Link href="/contractors" className="hover:text-white">Partner With Us</Link></li>
               <li><Link href="/privacy" className="hover:text-white">Privacy Policy</Link></li>
               <li><Link href="/terms" className="hover:text-white">Terms of Service</Link></li>

@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { site } from "@/config/site";
 import { cities } from "@/config/cities";
 import { activeTrades } from "@/config/trades";
+import { guides } from "@/config/guides";
 import { cityHref, serviceHref } from "@/lib/content";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -10,6 +11,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/", priority: 1 },
     { path: "/services", priority: 0.8 },
     { path: "/contractors", priority: 0.6 },
+    { path: "/guides", priority: 0.6 },
     { path: "/privacy", priority: 0.2 },
     { path: "/terms", priority: 0.2 },
   ];
@@ -17,7 +19,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const servicePages = activeTrades.flatMap((t) =>
     cities.flatMap((c) => t.projectTypes.map((p) => ({ path: serviceHref(c, p), priority: 0.8 }))),
   );
-  return [...staticPages, ...cityPages, ...servicePages].map(({ path, priority }) => ({
+  return [...staticPages, ...cityPages, ...servicePages, ...guides.map((g) => ({ path: `/guides/${g.slug}`, priority: 0.7 }))].map(({ path, priority }) => ({
     url: `${site.url}${path === "/" ? "" : path}`,
     lastModified: now,
     changeFrequency: "monthly",
