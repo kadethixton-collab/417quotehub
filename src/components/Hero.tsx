@@ -24,8 +24,8 @@ export default function Hero({ trade, headline, subheadline, defaultCity, eyebro
           <p className="mt-3 text-base text-brand-100 sm:mt-4 sm:text-xl">{subheadline}</p>
           <ul className="mt-6 hidden gap-3 text-brand-50 sm:grid">
             {[
-              `${site.maxQuotes}-Quote Guarantee — your info goes to ${site.maxQuotes} pros max`,
-              `Vetted, established local ${trade.proPlural} — no storm chasers`,
+              `${site.guaranteeName}: your info goes to ${site.maxQuotes} pros max`,
+              `Vetted, established local ${trade.proPlural} — no fly-by-night crews`,
               "100% free for homeowners. No obligation, ever.",
             ].map((t) => (
               <li key={t} className="flex items-start gap-2">
@@ -37,11 +37,12 @@ export default function Hero({ trade, headline, subheadline, defaultCity, eyebro
         </div>
         <div id="quote" className="scroll-mt-20 text-slate-900">
           <QuoteForm
-            trade={{ slug: trade.slug, name: trade.name, proPlural: trade.proPlural, projectTypes: trade.projectTypes }}
+            trade={{ slug: trade.slug, name: trade.name, proPlural: trade.proPlural, projectTypes: trade.projectTypes, notePlaceholder: trade.notePlaceholder }}
             cities={cityOptions}
             defaultCity={defaultCity}
             brandName={site.name}
             maxQuotes={site.maxQuotes}
+            quoteRange={site.quoteRange}
           />
         </div>
       </div>

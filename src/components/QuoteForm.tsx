@@ -15,17 +15,18 @@ import {
 type CityOption = { slug: string; name: string; zips: string[] };
 
 type Props = {
-  trade: Pick<Trade, "slug" | "name" | "proPlural" | "projectTypes">;
+  trade: Pick<Trade, "slug" | "name" | "proPlural" | "projectTypes" | "notePlaceholder">;
   cities: CityOption[];
   /** Pre-select a city (used on city landing pages). */
   defaultCity?: string;
   brandName: string;
   maxQuotes: number;
+  quoteRange: string;
 };
 
 const STEPS = ["Project", "Timeline", "Location", "Contact"] as const;
 
-export default function QuoteForm({ trade, cities, defaultCity, brandName, maxQuotes }: Props) {
+export default function QuoteForm({ trade, cities, defaultCity, brandName, maxQuotes, quoteRange }: Props) {
   const [step, setStep] = useState(0);
   const [projectType, setProjectType] = useState("");
   const [timeline, setTimeline] = useState("");
@@ -177,7 +178,7 @@ export default function QuoteForm({ trade, cities, defaultCity, brandName, maxQu
       onSubmit={onSubmit}
       noValidate
       className="relative rounded-2xl bg-white p-4 shadow-xl ring-1 ring-slate-200 sm:p-7"
-      aria-label={`Get ${maxQuotes} free ${trade.name.toLowerCase()} quotes`}
+      aria-label={`Get ${quoteRange} free ${trade.name.toLowerCase()} quotes`}
     >
       {/* Progress */}
       <div className="mb-5">
@@ -313,9 +314,9 @@ export default function QuoteForm({ trade, cities, defaultCity, brandName, maxQu
         {step === 3 && (
           <fieldset>
             <legend tabIndex={-1} data-step-heading className="mb-1 text-xl font-bold text-slate-900 outline-none">
-              Last step — where should your {maxQuotes} quotes go?
+              Last step — where should your {quoteRange} quotes go?
             </legend>
-            <p className="mb-4 text-sm text-slate-500">Shared with {maxQuotes} vetted local pros only. Never sold.</p>
+            <p className="mb-4 text-sm text-slate-500">Shared with {maxQuotes} vetted local pros max. Never sold.</p>
             <div className="space-y-3">
               <div>
                 <label htmlFor="qf-name" className="text-sm font-semibold text-slate-700">Full name</label>
@@ -338,7 +339,7 @@ export default function QuoteForm({ trade, cities, defaultCity, brandName, maxQu
                 <label htmlFor="qf-note" className="text-sm font-semibold text-slate-700">
                   Project details <span className="font-normal text-slate-500">(optional)</span>
                 </label>
-                <textarea id="qf-note" rows={2} maxLength={1000} placeholder="e.g. Hail last spring, some missing shingles on the north side" value={note} onChange={(e) => setNote(e.target.value)} className={input} />
+                <textarea id="qf-note" rows={2} maxLength={1000} placeholder={trade.notePlaceholder} value={note} onChange={(e) => setNote(e.target.value)} className={input} />
               </div>
               {/* Honeypot: hidden from humans */}
               <div className="absolute -left-[9999px]" aria-hidden="true">
@@ -380,7 +381,7 @@ export default function QuoteForm({ trade, cities, defaultCity, brandName, maxQu
         )}
         {step === 3 && (
           <button type="submit" disabled={status === "submitting"} className="ml-auto inline-flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-accent-500 px-4 py-3.5 text-base font-bold sm:px-5 sm:text-lg text-slate-900 shadow hover:bg-accent-400 focus:outline-none focus-visible:ring-4 focus-visible:ring-accent-200 disabled:opacity-60">
-            {status === "submitting" ? "Matching you…" : `Get My ${maxQuotes} Free Quotes`}
+            {status === "submitting" ? "Matching you…" : `Get My ${quoteRange} Free Quotes`}
           </button>
         )}
         {step < 2 && (

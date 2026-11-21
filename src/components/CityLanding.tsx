@@ -14,8 +14,8 @@ import JsonLd from "./JsonLd";
 import { Icon } from "./Icons";
 
 export function cityMetadata(trade: Trade, city: City): Metadata {
-  const title = `${trade.name} Quotes in ${city.name}, MO — Compare ${site.maxQuotes} Local Pros`;
-  const description = `Get up to ${site.maxQuotes} free ${trade.name.toLowerCase()} quotes from vetted ${city.name}, MO ${trade.proPlural}. Serving ${city.neighborhoods
+  const title = `${trade.name} Quotes in ${city.name}, MO — Compare ${site.quoteRange} Local Pros`;
+  const description = `Get ${site.quoteRange} free ${trade.name.toLowerCase()} quotes from vetted ${city.name}, MO ${trade.proPlural}. Serving ${city.neighborhoods
     .slice(0, 2)
     .join(" & ")} and all of ${city.zips.join(", ")}. No spam calls — ${site.maxQuotes} pros max.`;
   const path = cityHref(city, trade);
@@ -97,7 +97,7 @@ export default function CityLanding({ trade, city }: { trade: Trade; city: City 
         }
         headline={
           <>
-            Compare {site.maxQuotes} Free {trade.name} Quotes in {city.name}, MO —{" "}
+            Compare {site.quoteRange} Free {trade.name} Quotes in {city.name}, MO —{" "}
             <span className="text-accent-400">Zero Spam Calls</span>
           </>
         }
@@ -167,9 +167,9 @@ export default function CityLanding({ trade, city }: { trade: Trade; city: City 
 
       <HowItWorks trade={trade} />
       <FAQ items={faqs} title={`${city.name} ${trade.name} FAQs`} />
-      <CtaBand label={`Get ${site.maxQuotes} Free Quotes in ${city.name}`} title={`${city.name} homeowners: get honest ${trade.name.toLowerCase()} quotes today`} />
+      <CtaBand label={`Get ${site.quoteRange} Free Quotes in ${city.name}`} title={`${city.name} homeowners: get honest ${trade.name.toLowerCase()} quotes today`} />
       {nearby.length > 0 && <ServiceAreaGrid trade={trade} exclude={city.slug} title={`Nearby ${site.areaCode} Service Areas`} />}
-      <MobileCtaBar label={`Get ${site.maxQuotes} Free Quotes in ${city.name}`} />
+      <MobileCtaBar label={`Get ${site.quoteRange} Free Quotes in ${city.name}`} />
     </>
   );
 }

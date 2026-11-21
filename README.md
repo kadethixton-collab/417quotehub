@@ -1,8 +1,10 @@
-# 417 QuoteHub
+# 417 Quote Hub
 
 A fast, hyper-local quote-matching site for Southwest Missouri (the 417), built with **Next.js (App Router)** and **Tailwind CSS v4**.
 
-**The 2-Quote Guarantee:** a homeowner submits one request and is matched with **no more than 2** vetted local contractors. They compare prices without being spammed by 5+ call centers.
+**The 3-Quote Max Guarantee:** a homeowner submits one request and is matched with **2–3** vetted local concrete & driveway contractors, never more than 3. They compare prices without being spammed by 5+ call centers.
+
+Live domain: **417quotehub.com** · Contact: **quotes@417quotehub.com**
 
 Service area: Springfield, Nixa, Ozark, Republic, Willard, Battlefield, and Rogersville, MO.
 
@@ -20,13 +22,13 @@ Production build: `npm run build && npm start`. Type-check only: `npm run lint`.
 
 ## Changing the brand or trade
 
-The prompt's `[YOUR BRAND NAME]` and `[YOUR FIRST TRADE]` placeholders are set in config:
+The brand (417 Quote Hub), the primary trade (Concrete & Driveway), and the quote cap are set in config:
 
 | What | Where |
 | --- | --- |
-| Brand name, email, site URL, max quotes | `src/config/site.ts` |
+| Brand name, email, domain, quote cap (`maxQuotes: 3`, `quoteRange: "2–3"`) | `src/config/site.ts` |
 | Which trade the homepage and `/services/[city]` show | `primaryTradeSlug` in `src/config/site.ts` |
-| Trade content (project types, FAQs, partner pricing, per-city copy) | `src/config/trades.ts` |
+| Trade content (project types, FAQs, partner plan pricing, per-city copy) | `src/config/trades.ts` |
 | Cities (neighborhoods, landmarks, ZIPs, permit offices) | `src/config/cities.ts` |
 | Brand colors | `@theme` block in `src/app/globals.css` |
 
@@ -36,17 +38,17 @@ The footer disclaimer, legal pages, meta tags, and JSON-LD all read the brand na
 
 Everything about a trade lives in **one file: `src/config/trades.ts`**.
 
-1. Copy the `hvac` example entry, which ships disabled, or copy the roofing entry.
-2. Fill in `projectTypes` (exactly 4; "Something Else" is added automatically), `faqs`, `localConsiderations`, and `partner` pricing and seats.
+1. Copy the `roofing` example entry, which ships disabled, or copy the concrete entry.
+2. Fill in `projectTypes` (exactly 4; "Something Else" is added automatically), `notePlaceholder`, `faqs`, `localConsiderations`, and `partner` plans.
 3. Set `enabled: true`.
 
 You get these automatically:
 
 - `/services/[city]/[trade]` pages for all 7 cities, statically generated with meta tags and JSON-LD
 - Sitemap entries, plus links on `/services`
-- The trade in the contractor application's dropdown, with live seat counts
+- The trade in the contractor application's dropdown
 
-`cityContent` is optional. Without it, city pages use localized templates built from `cities.ts`. Custom copy per city ranks better, so write it when you can (see roofing for examples).
+`cityContent` is optional. Without it, city pages use localized templates built from `cities.ts`. Custom copy per city ranks better, so write it when you can (see concrete for examples).
 
 ## Lead delivery (webhook)
 
@@ -57,12 +59,12 @@ The quote form POSTs to `/api/submit-lead`. The route validates the request on t
   "type": "homeowner_lead",
   "leadId": "uuid",
   "submittedAt": "2026-11-21T00:11:13.520Z",
-  "brand": "417 QuoteHub",
-  "maxContractors": 2,
-  "trade": "roofing",
-  "tradeName": "Roofing",
-  "projectType": "storm",
-  "projectTypeLabel": "Hail / Storm Damage",
+  "brand": "417 Quote Hub",
+  "maxContractors": 3,
+  "trade": "concrete",
+  "tradeName": "Concrete & Driveway",
+  "projectType": "driveway",
+  "projectTypeLabel": "Concrete Driveways",
   "timeline": "asap",
   "timelineLabel": "ASAP",
   "city": "Nixa",
@@ -71,9 +73,9 @@ The quote form POSTs to `/api/submit-lead`. The route validates the request on t
   "fullName": "Jane Doe",
   "phone": "4175551234",
   "email": "jane@example.com",
-  "note": "Hail last spring",
+  "note": "Replace cracked 2-car driveway",
   "consent": true,
-  "consentText": "I agree to be contacted by up to 2 local contractors…",
+  "consentText": "I agree to be contacted by up to 3 local contractors…",
   "sourcePage": "/services/nixa-mo",
   "userAgent": "…"
 }
@@ -82,7 +84,7 @@ The quote form POSTs to `/api/submit-lead`. The route validates the request on t
 - **No webhook set:** the lead is logged to the server console (visible in Vercel → Logs) and the homeowner still sees the "You're Matched!" screen.
 - **Webhook fails** (non-2xx or a 10-second timeout): the full payload is logged so the lead isn't lost, and the homeowner gets a "please try again" message.
 
-Contractor applications from `/contractors` POST to `/api/submit-partner`. They are forwarded to `PARTNER_WEBHOOK_URL`, or to `LEAD_WEBHOOK_URL` if that is blank, with `"type": "partner_application"`.
+Contractor applications from `/contractors` POST to `/api/submit-partner`. They are forwarded to `PARTNER_WEBHOOK_URL`, or to `LEAD_WEBHOOK_URL` if that is blank, with `"type": "partner_application"`, the chosen `plan` (`lead-pack`, `priority`, or `unsure`), and a `seatStatus` for Priority Placement (`seat_available` or `waitlist`).
 
 Any endpoint that accepts JSON works: Zapier/Make/n8n "Catch Hook", a Slack workflow, GoHighLevel, HubSpot, or your own API. Route on the `type` field.
 
@@ -93,9 +95,9 @@ Any endpoint that accepts JSON works: Zapier/Make/n8n "Catch Hook", a Slack work
 3. Under **Settings → Environment Variables**, add:
    - `LEAD_WEBHOOK_URL`: your Zapier/Make/CRM webhook URL
    - `PARTNER_WEBHOOK_URL` (optional)
-   - `NEXT_PUBLIC_SITE_URL`: your production URL, e.g. `https://www.yourdomain.com`. It's used for canonical URLs, the sitemap, and JSON-LD.
-4. Deploy. Then add your custom domain under **Settings → Domains**.
-5. Submit `https://yourdomain.com/sitemap.xml` in Google Search Console.
+   - `NEXT_PUBLIC_SITE_URL`: `https://417quotehub.com`. It's used for canonical URLs, the sitemap, and JSON-LD.
+4. Deploy. Then add `417quotehub.com` (and `www.417quotehub.com`, redirecting to the apex) under **Settings → Domains**.
+5. Submit `https://417quotehub.com/sitemap.xml` in Google Search Console.
 
 After changing environment variables, redeploy. `NEXT_PUBLIC_SITE_URL` is baked in at build time.
 
@@ -108,7 +110,7 @@ src/
     services/page.tsx                Service-area index
     services/[city]/page.tsx         Primary-trade city pages (static)
     services/[city]/[trade]/page.tsx Additional-trade city pages (static)
-    contractors/page.tsx             2-Seat Partner Program + application
+    contractors/page.tsx             Growth Pack + Priority Placement plans + application
     privacy/, terms/                 Legal pages
     api/submit-lead/route.ts         Homeowner lead → webhook
     api/submit-partner/route.ts      Contractor application → webhook
@@ -139,8 +141,9 @@ Adding analytics or chat widgets will lower those scores. Load them with `next/s
 
 ## Before launch: checklist
 
-- [ ] Set the brand name, email, and domain in `src/config/site.ts`
-- [ ] Set real `partner.monthlyPrice` and `seatsOpen` in `trades.ts`
+- [ ] Set real plan prices in `trades.ts` (`defaultPartnerPlans`): the Growth Pack is a **$450** placeholder and Priority Placement is a **$597/mo** placeholder
+- [ ] Set `priority.seatsOpen` as Priority seats fill
+- [ ] Confirm the bad-lead credit policy listed in the Growth Pack features matches how you'll operate
 - [ ] Have a Missouri attorney review `/privacy` and `/terms`, including TCPA consent wording for calls and texts
 - [ ] Connect `LEAD_WEBHOOK_URL` and send a test lead
 - [ ] Verify the city facts (neighborhoods, landmarks, permit offices) against your local knowledge

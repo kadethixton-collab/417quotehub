@@ -25,8 +25,8 @@ export function cityTradeContent(trade: Trade, city: City): CityTradeContent {
 
   return {
     intro: [
-      `${city.name} homes include ${city.housingNote}. Each comes with its own ${trade.subject} challenges, and Southwest Missouri's hot, humid summers, spring storms, and freeze-thaw winters put every system to the test.`,
-      `Whether you live in ${listify(city.neighborhoods.slice(0, 3))}, we'll match you with up to ${site.maxQuotes} vetted local ${trade.proPlural} who regularly work in ${city.name} and ${city.county} — so you can compare honest quotes without getting buried in spam calls.`,
+      `${city.name} homes include ${city.housingNote}. Each comes with its own ${trade.subject} challenges, and Southwest Missouri's hot, humid summers, heavy spring rains, and freeze-thaw winters put every project to the test.`,
+      `Whether you live in ${listify(city.neighborhoods.slice(0, 3))}, we'll match you with ${site.quoteRange} vetted local ${trade.proPlural} who regularly work in ${city.name} and ${city.county} — so you can compare honest quotes without getting buried in spam calls.`,
     ],
     considerations: [
       {
@@ -55,11 +55,11 @@ export function generalFaqs(trade: Trade): FAQ[] {
   return [
     {
       q: "Is it really free?",
-      a: `Yes — 100% free for homeowners, with no obligation to hire anyone. ${site.name} is funded by a flat monthly membership paid by our local partner contractors. You'll never pay us a dime, and the price you're quoted isn't inflated by per-lead fees.`,
+      a: `Yes — 100% free for homeowners, with no obligation to hire anyone. ${site.name} is paid by our local partner contractors, through prepaid lead packs or a flat monthly placement plan. You'll never pay us a dime.`,
     },
     {
       q: "Will my phone get spammed?",
-      a: `No. That's the whole point. With our ${site.maxQuotes}-Quote Guarantee, your request goes to a maximum of ${site.maxQuotes} vetted local ${trade.proPlural} — never sold to a list of 5+ companies or a national call center. We don't sell your information.`,
+      a: `No. That's the whole point. With our ${site.guaranteeName}, your request goes to a maximum of ${site.maxQuotes} vetted local ${trade.proPlural} — never sold to a list of 5+ companies or a national call center. We don't sell your information.`,
     },
     {
       q: "Are the contractors licensed & insured?",
@@ -67,7 +67,7 @@ export function generalFaqs(trade: Trade): FAQ[] {
     },
     {
       q: "How fast will I hear back?",
-      a: `Most homeowners hear from their matched ${trade.proPlural} within one business day — often the same day. After major storms, response times can be slightly longer.`,
+      a: `Most homeowners hear from their matched ${trade.proPlural} within one business day — often the same day. In peak season, typically spring through fall, it can take a little longer.`,
     },
     {
       q: `Are you the company doing the ${trade.name.toLowerCase()} work?`,

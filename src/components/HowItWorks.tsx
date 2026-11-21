@@ -5,7 +5,7 @@ import { Icon, type IconName } from "./Icons";
 export default function HowItWorks({ trade }: { trade: Trade }) {
   const steps: { icon: IconName; title: string; body: string }[] = [
     { icon: "clipboard", title: "Tell us about your project", body: "Answer 4 quick questions about your " + trade.subject + " project. It takes about 60 seconds." },
-    { icon: "users", title: `We match you with ${site.maxQuotes} vetted local pros`, body: `We hand-pick up to ${site.maxQuotes} established ${site.areaCode} ${trade.proPlural} who serve your city. Never 5. Never a call center.` },
+    { icon: "users", title: `We match you with ${site.quoteRange} vetted local pros`, body: `We hand-pick up to ${site.maxQuotes} established ${site.areaCode} ${trade.proPlural} who serve your city. Never 5. Never a call center.` },
     { icon: "scale", title: "Compare quotes & hire who you trust", body: "Get honest, competing quotes. Choose the best fit — or no one at all. Zero obligation." },
   ];
   return (
@@ -13,7 +13,7 @@ export default function HowItWorks({ trade }: { trade: Trade }) {
       <div className="mx-auto max-w-6xl px-4">
         <p className="text-center text-sm font-bold uppercase tracking-widest text-brand-700">How It Works</p>
         <h2 id="hiw-title" className="mt-2 text-center text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
-          {site.maxQuotes} honest quotes in 3 simple steps
+          {site.quoteRange} honest quotes in 3 simple steps
         </h2>
         <ol className="mt-12 grid gap-6 md:grid-cols-3">
           {steps.map((s, i) => (

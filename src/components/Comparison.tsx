@@ -11,9 +11,9 @@ export default function Comparison({ trade }: { trade: Trade }) {
     { label: "Cost to homeowners", us: "100% free", them: "Free (you pay with your phone number)" },
   ];
   const cards = [
-    { icon: "phoneOff" as const, title: `${site.maxQuotes} Local Bids Max`, body: "Not a 5-way spam call free-for-all. Your info goes to two pros, period." },
+    { icon: "phoneOff" as const, title: `${site.maxQuotes} Local Bids Max`, body: `Not a 5-way spam call free-for-all. Your info goes to ${site.maxQuotes} pros max, period.` },
     { icon: "shield" as const, title: "Vetted Ozarks Pros", body: "Established local companies with required licensing, insurance, and real 417 track records." },
-    { icon: "dollar" as const, title: "100% Free for Homeowners", body: "Contractors pay a flat membership, so you never pay us — and there's no obligation to hire." },
+    { icon: "dollar" as const, title: "100% Free for Homeowners", body: "Local contractors pay us, so you never do. And there's no obligation to hire." },
   ];
   return (
     <section className="bg-white py-16 sm:py-20" aria-labelledby="cmp-title">

@@ -25,7 +25,7 @@ export default function Terms() {
         choose.
       </p>
 
-      <h2>2. The {site.maxQuotes}-Quote Guarantee</h2>
+      <h2>2. The {site.guaranteeName}</h2>
       <p>
         When you submit a request, we will share it with no more than {site.maxQuotes} independent contractors. We cannot guarantee
         that any contractor will be available, will respond within a specific time, or will provide a quote at a particular
@@ -34,8 +34,7 @@ export default function Terms() {
 
       <h2>3. Free for homeowners</h2>
       <p>
-        Our service is free for homeowners. You are never obligated to hire any contractor we match you with. Contractors pay
-        us a membership fee to participate in our network.
+        Our service is free for homeowners. You are never obligated to hire any contractor we match you with. Contractors pay us to participate in our network, through prepaid lead packs or a monthly placement plan.
       </p>
 
       <h2>4. Contractor vetting</h2>

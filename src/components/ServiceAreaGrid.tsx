@@ -14,7 +14,7 @@ export default function ServiceAreaGrid({ trade, exclude, title }: { trade: Trad
           {title ?? `Serving Homeowners Across the ${site.areaCode}`}
         </h2>
         <p className="mx-auto mt-3 max-w-2xl text-center text-slate-600">
-          Local {trade.name.toLowerCase()} pros who actually know your town. Pick your city for local tips, FAQs, and {site.maxQuotes} free quotes.
+          Local {trade.name.toLowerCase()} pros who actually know your town. Pick your city for local tips, FAQs, and {site.quoteRange} free quotes.
         </p>
         <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {list.map((c) => (

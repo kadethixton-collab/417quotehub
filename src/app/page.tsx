@@ -14,7 +14,7 @@ import { generalFaqs, getPrimaryTrade } from "@/lib/content";
 const trade = getPrimaryTrade();
 
 export const metadata: Metadata = {
-  title: { absolute: `Compare ${site.maxQuotes} Free ${trade.name} Quotes in Springfield, MO & the 417 | ${site.name}` },
+  title: { absolute: `Compare ${site.quoteRange} Free ${trade.name} Quotes in Springfield, MO & the 417 | ${site.name}` },
   alternates: { canonical: "/" },
 };
 
@@ -44,19 +44,19 @@ export default function Home() {
         trade={trade}
         eyebrow={
           <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm font-semibold text-brand-100 ring-1 ring-white/20">
-            <span className="h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true" /> The {site.maxQuotes}-Quote Guarantee
+            <span className="h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true" /> The {site.guaranteeName}
           </span>
         }
         headline={
           <>
-            Compare {site.maxQuotes} Free Quotes From Vetted {site.areaCode} {trade.name} Pros —{" "}
+            Compare {site.quoteRange} Free Quotes From Vetted {site.areaCode} {trade.name} Pros —{" "}
             <span className="text-accent-400">Zero Spam Calls</span>
           </>
         }
         subheadline={
           <>
             One quick request for homeowners in Springfield, Nixa, Ozark &amp; surrounding Southwest Missouri towns. We
-            match you with up to {site.maxQuotes} local pros — never 5 call centers.
+            match you with {site.quoteRange} local pros, never 5 call centers.
           </>
         }
       />
@@ -64,8 +64,8 @@ export default function Home() {
       <Comparison trade={trade} />
       <ServiceAreaGrid trade={trade} />
       <FAQ items={faqs} />
-      <CtaBand label={`Get ${site.maxQuotes} Free ${trade.name} Quotes`} />
-      <MobileCtaBar label={`Get ${site.maxQuotes} Free Quotes`} />
+      <CtaBand label={`Get ${site.quoteRange} Free ${trade.name} Quotes`} />
+      <MobileCtaBar label={`Get ${site.quoteRange} Free Quotes`} />
     </>
   );
 }

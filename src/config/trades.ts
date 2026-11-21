@@ -3,12 +3,12 @@
  *  TRADE CONFIG — the single file you edit to launch a new trade category.
  * ───────────────────────────────────────────────────────────────────────────
  * To add a 2nd or 3rd trade:
- *   1. Copy the `hvac` example below (or the roofing entry), give it a new slug.
+ *   1. Copy the disabled `roofing` example at the bottom (or the concrete entry).
  *   2. Fill in project types, FAQs, local considerations, and partner pricing.
  *   3. Set `enabled: true`.
- * That's it. The site automatically generates:
+ * The site automatically generates:
  *   - /services/[city]/[trade] landing pages for all 7 cities
- *   - sitemap entries, JSON-LD, and a trade selector on the contractor application
+ *   - sitemap entries, JSON-LD, and a trade option on the contractor application
  * `cityContent` is optional — without it, city pages use localized templates
  * built from cities.ts. Write custom city copy when you can; it ranks better.
  *
@@ -26,45 +26,382 @@ export type CityTradeContent = {
   faqs: FAQ[];
 };
 
+export type PartnerPlans = {
+  /** Prepaid, pay-as-you-go lead pack. */
+  leadPack: {
+    name: string;
+    leads: number;
+    price: number;
+    features: string[];
+  };
+  /** Flat monthly retainer with priority placement. Seats are limited per trade. */
+  priority: {
+    name: string;
+    monthlyPrice: number;
+    seatsTotal: number;
+    seatsOpen: number;
+    features: string[];
+  };
+};
+
 export type Trade = {
   slug: string;
   enabled: boolean;
-  /** "Roofing" — used in "417 Roofing Pros". */
+  /** "Concrete & Driveway" — used in "417 Concrete & Driveway Pros". */
   name: string;
-  /** "roofer" / "roofers" — used in body copy. */
+  /** "concrete contractor" / "concrete contractors" — used in body copy. */
   proSingular: string;
   proPlural: string;
-  /** "roof" — the thing being worked on, used in body copy. */
+  /** "concrete" — the thing being worked on, used in body copy. */
   subject: string;
   /** Schema.org serviceType for JSON-LD. */
   serviceType: string;
-  /** Exactly 4 project types. "Other" is appended automatically in the form. */
+  /** Exactly 4 project types. "Something Else" is appended automatically in the form. */
   projectTypes: ProjectType[];
+  /** Placeholder for the optional project note on step 4 of the form. */
+  notePlaceholder: string;
   shortDescription: string;
   /** Southwest-Missouri-specific considerations for this trade (used on every city page). */
   localConsiderations: Consideration[];
   /** Trade-specific FAQs shown on the homepage alongside the general ones. */
   faqs: FAQ[];
-  partner: {
-    monthlyPrice: number;
-    seatsTotal: number;
-    seatsOpen: number;
-    /** e.g. "8–15 exclusive-to-2 requests per month" — keep honest. */
-    leadEstimate: string;
-  };
+  partner: PartnerPlans;
   cityContent: Partial<Record<string, CityTradeContent>>;
+};
+
+/* Partner plans. PRICES ARE PLACEHOLDERS — set your real numbers before launch. */
+const defaultPartnerPlans: PartnerPlans = {
+  leadPack: {
+    name: "10-Lead Growth Pack",
+    leads: 10,
+    price: 450,
+    features: [
+      "10 prepaid homeowner requests in your service cities",
+      "Each request shared with 2–3 pros max — never 5+",
+      "Pay as you go: no contract, no monthly fee",
+      "Reload anytime when your pack runs low",
+      "Bad-lead credit for wrong numbers or out-of-area requests",
+    ],
+  },
+  priority: {
+    name: "Monthly Priority Placement",
+    monthlyPrice: 597,
+    seatsTotal: 2,
+    seatsOpen: 2,
+    features: [
+      "First claim on every matching request in your service cities",
+      "A guaranteed spot among the 2–3 pros on each project you accept",
+      "No per-lead charges: one flat monthly retainer",
+      "Featured as a Priority Partner to homeowners",
+      "Month-to-month. Cancel anytime",
+    ],
+  },
 };
 
 export const trades: Trade[] = [
   {
-    slug: "roofing",
+    slug: "concrete",
     enabled: true,
+    name: "Concrete & Driveway",
+    proSingular: "concrete contractor",
+    proPlural: "concrete contractors",
+    subject: "concrete",
+    serviceType: "Concrete contractor referral",
+    shortDescription: "Driveways, patios, sidewalks, stamped concrete, slab leveling, and garage & shop slabs.",
+    notePlaceholder: "e.g. Replace a cracked 2-car driveway, about 20×40 ft, plus the front walk",
+    projectTypes: [
+      { id: "driveway", label: "Concrete Driveways", description: "New & replacement", icon: "road" },
+      { id: "patio-sidewalk", label: "Patios, Sidewalks & Stamped Concrete", description: "Flatwork & decorative finishes", icon: "grid" },
+      { id: "lifting-leveling", label: "Concrete Lifting & Leveling", description: "Polyjacking sunken slabs", icon: "level" },
+      { id: "slab", label: "Garage, Basement & Shop Slabs", description: "New pours & replacements", icon: "layers" },
+    ],
+    localConsiderations: [
+      {
+        title: "Ozarks clay and rock need a real base",
+        body: "Much of the 417 sits on red clay over fractured limestone and chert. Clay swells when wet and shrinks in drought, which cracks slabs poured on a thin or poorly compacted base. Ask each contractor how deep they excavate and how many inches of compacted gravel they put down.",
+      },
+      {
+        title: "Freeze-thaw cycles are hard on concrete",
+        body: "Southwest Missouri winters swing above and below freezing again and again. Air-entrained concrete, proper control joints, and a quality sealer help prevent surface scaling and spalling. Skip rock salt for the first winter after a pour.",
+      },
+      {
+        title: "Karst means slabs can sink",
+        body: "The Springfield Plateau is karst country, full of sinkholes and voids where soil can wash out from under a slab. That's why so many 417 driveways, sidewalks, and garage floors settle. Polyjacking (foam leveling) can often lift a sunken slab for far less than replacement.",
+      },
+      {
+        title: "Summer heat changes how concrete cures",
+        body: "Hot, humid Missouri summers can make concrete set too fast, which weakens the surface. Good crews pour early in the day and cure the slab properly. Ask each contractor how they handle curing in July and August.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Should I level my concrete or replace it?",
+        a: "If the slab is sunken but mostly intact, with few large cracks or broken pieces, lifting and leveling with polyjacking is usually faster and much cheaper than replacement. If it's badly cracked, crumbling, or heaved by tree roots, replacement often makes more sense. Your matched pros can tell you which fits your slab.",
+      },
+      {
+        q: "How long before I can drive on a new concrete driveway?",
+        a: "Most contractors recommend staying off new concrete on foot for about a day and with passenger vehicles for about 7 days. Wait closer to a month before heavy trucks, trailers, or RVs. Your contractor will give exact guidance for your mix and the weather.",
+      },
+      {
+        q: "How thick should my driveway be?",
+        a: "Four inches is common for passenger cars. If you park heavy pickups, trailers, boats, or RVs, ask each contractor to quote 5–6 inches with rebar. That's common for 417 homes on acreage.",
+      },
+    ],
+    partner: defaultPartnerPlans,
+    cityContent: {
+      "springfield-mo": {
+        intro: [
+          "Springfield's concrete tells the story of the city. In older neighborhoods like Rountree, Phelps Grove, and Midtown, decades-old driveways and front walks are often narrow, cracked, or heaved by the roots of big shade trees. Across the mid-century ranch neighborhoods on the north and west sides, sunken garage aprons and sidewalks are common: soil settles or washes out underneath, and the Springfield Plateau's karst geology doesn't help.",
+          "Whether you're near Missouri State, off Commercial Street, or out in Southern Hills past Battlefield Mall, we'll match you with 2–3 vetted Springfield concrete contractors who know Greene County soils and city requirements. Compare honest prices without getting buried in calls.",
+        ],
+        considerations: [
+          {
+            title: "Driveway approaches & city sidewalks",
+            body: "Work in the public right-of-way, like the driveway apron where it meets the street or the public sidewalk, often needs a permit from the City of Springfield. Ask each contractor whether permits are included in their quote.",
+          },
+          {
+            title: "Tree roots in established neighborhoods",
+            body: "Mature trees in Rountree, Phelps Grove, and Galloway lift and crack slabs. A good quote addresses the roots, for example by rerouting, a root barrier, or a thicker slab with rebar, so the new driveway doesn't crack the same way.",
+          },
+          {
+            title: "Level first, replace second",
+            body: "Many sunken Springfield driveways and garage floors are still structurally sound. Ask for a polyjacking quote alongside a replacement quote. Leveling can cost a fraction of the price.",
+          },
+        ],
+        faqs: [
+          {
+            q: "Do I need a permit to replace my driveway in Springfield, MO?",
+            a: "If the work touches the city right-of-way, such as the apron at the street or the public sidewalk, a permit from the City of Springfield is commonly required. Reputable local contractors handle this for you. Confirm it's included when you compare quotes.",
+          },
+          {
+            q: "Why is my Springfield driveway sinking?",
+            a: "Usually the soil underneath has settled, washed out, or was never compacted well. Springfield's karst geology and clay soils make this common. Polyjacking injects foam beneath the slab to lift it back into place, usually in a few hours.",
+          },
+          {
+            q: "Do you serve all Springfield ZIP codes?",
+            a: "Yes. We match homeowners across 65802, 65803, 65804, 65806, 65807, 65809, and 65810, from the north side near Doling Park to the far south side.",
+          },
+        ],
+      },
+      "nixa-mo": {
+        intro: [
+          "Nixa has grown fast, and many subdivision homes off Tracker Road, Northview, and the Highway 160 corridor were built in the same boom. A common result is settling concrete. Soil backfilled around new foundations is often not compacted well, so a few years later the driveway sinks near the garage, the front walk tilts toward the house, or the back patio pulls away from the foundation.",
+          "Nixa homeowners are also adding stamped patios, wider driveways, and extra parking pads. Tell us about your project and we'll connect you with 2–3 vetted local concrete contractors who regularly work in Nixa neighborhoods, with no call-center spam.",
+        ],
+        considerations: [
+          {
+            title: "HOA rules on driveway widening",
+            body: "Many Nixa subdivisions have HOA covenants covering driveway width, extra parking pads, or decorative finishes. Get approval in writing before you sign any quote.",
+          },
+          {
+            title: "Settling near the garage and foundation",
+            body: "If your slab is sinking toward the house, water can run toward your foundation. Polyjacking can lift the slab and restore drainage, often in a single afternoon.",
+          },
+          {
+            title: "Stamped concrete done right",
+            body: "Stamped patios look great but need proper sealing to hold up through Ozarks winters. Ask each contractor which sealer they use and how often they recommend resealing.",
+          },
+        ],
+        faqs: [
+          {
+            q: "Does my Nixa HOA need to approve a new driveway or patio?",
+            a: "Often, yes, especially for widening a driveway or adding a parking pad. Check your subdivision's covenants and get approval in writing before work starts.",
+          },
+          {
+            q: "Why is the concrete near my Nixa home's foundation sinking?",
+            a: "In many newer subdivisions, the soil backfilled around the foundation wasn't fully compacted and settles over time. Concrete lifting can usually raise the slab and restore drainage away from your house.",
+          },
+          {
+            q: "How quickly can I get concrete quotes in Nixa?",
+            a: "Most Nixa homeowners hear from their matched contractors within one business day. In peak season, typically spring through fall, it can take a little longer.",
+          },
+        ],
+      },
+      "ozark-mo": {
+        intro: [
+          "Ozark lives up to its name. Hilly lots near the Finley River, sloped driveways off J Highway and CC, and rocky ground east of Highway 65 make concrete work here more involved than pouring a flat slab in a cornfield. Grading, drainage, and digging through chert all affect the price, so comparing quotes really matters.",
+          "Whether you want a new driveway climbing a hillside, a stamped patio overlooking a wooded lot, or a sunken walk near the historic square leveled, we'll match you with 2–3 vetted local concrete contractors who know Christian County terrain.",
+        ],
+        considerations: [
+          {
+            title: "Sloped driveways need traction & drainage",
+            body: "Steep Ozark driveways get slick in ice storms. Ask about a heavier broom finish, and make sure each quote addresses drainage so water doesn't run under the slab or toward your garage.",
+          },
+          {
+            title: "Rocky ground affects excavation",
+            body: "Chert and limestone close to the surface can slow excavation and raise costs. A quote that seems low may not include rock removal, so ask each contractor to spell it out.",
+          },
+          {
+            title: "Shade and moisture near the Finley",
+            body: "Wooded, shaded lots stay damp, which can lead to algae and slick surfaces. A quality sealer and good drainage help patios and walks stay safe and clean.",
+          },
+        ],
+        faqs: [
+          {
+            q: "Is a concrete driveway on a hill more expensive in Ozark?",
+            a: "Often it is, because of extra grading, forming, drainage work, and sometimes rock removal. That's why comparing 2–3 quotes from contractors who know Ozark terrain is worth it.",
+          },
+          {
+            q: "Do I need a permit for driveway work in Ozark, MO?",
+            a: "Driveway approaches and work in the public right-of-way may need a permit from the City of Ozark. Your contractor should know the current requirements and include them in the quote.",
+          },
+          {
+            q: "Do you match homeowners outside Ozark city limits?",
+            a: "Yes. If you're in the 65721 ZIP code or elsewhere nearby in Christian County, we can match you with local pros who serve your area.",
+          },
+        ],
+      },
+      "republic-mo": {
+        intro: [
+          "Republic is one of the fastest-growing cities in Greene County, and its newer neighborhoods along the Highway 60 and 174 corridors are full of homeowners adding on: wider driveways, RV and boat pads, backyard patios, and walkways builders never included. Older ranch homes near downtown are reaching the age where original driveways need replacing.",
+          "Whether you're near Republic schools, on the north side, or close to Wilson's Creek National Battlefield, we'll connect you with 2–3 vetted local concrete contractors who know Republic. They'll still be around if something needs fixing.",
+        ],
+        considerations: [
+          {
+            title: "RV, boat & trailer pads",
+            body: "Heavy vehicles need a thicker slab (often 5–6 inches) with rebar and a well-compacted base. Make sure every quote list thickness and reinforcement so you can compare apples to apples.",
+          },
+          {
+            title: "Clay soils on new-construction lots",
+            body: "Disturbed soil on recently built lots can keep settling for years. Proper compaction and base depth matter more here than on established lots.",
+          },
+          {
+            title: "Check city requirements",
+            body: "Republic has its own building department. Driveway approaches or added curb cuts may need approval, so your contractor should confirm before pouring.",
+          },
+        ],
+        faqs: [
+          {
+            q: "How thick should an RV pad be in Republic?",
+            a: "Many contractors recommend 5–6 inches of concrete with rebar over a compacted gravel base for RVs and heavy trailers. Ask each of your matched pros to quote the same spec.",
+          },
+          {
+            q: "Do I need a permit to widen my driveway in Republic, MO?",
+            a: "Widening at the street or adding a curb cut commonly requires city approval. A reputable local contractor will know the current rules and handle the paperwork.",
+          },
+          {
+            q: "How many contractors will contact me?",
+            a: "No more than 3. That's our 3-Quote Max Guarantee: your information is never sold to a list of 5+ companies.",
+          },
+        ],
+      },
+      "willard-mo": {
+        intro: [
+          "Willard concrete projects often go well beyond a front walk. Rural properties along Highway 160 and AB tend to have long driveways, detached shops, barns, and equipment pads, and not every contractor is set up for a 40×60 shop slab or a few hundred feet of driveway. In town, ranch homes and newer subdivisions need the usual driveway, patio, and sidewalk work.",
+          "Tell us what you need poured and we'll match you with 2–3 vetted local concrete contractors who serve Willard and northwest Greene County, from the Frisco Highline Trail trailhead out toward Walnut Grove.",
+        ],
+        considerations: [
+          {
+            title: "Shop & equipment slabs",
+            body: "Shop floors that carry tractors, trucks, or lifts need thicker concrete, rebar, and often a vapor barrier. Mention the slab size and what will park on it in your project note.",
+          },
+          {
+            title: "Long driveways: concrete vs. gravel",
+            body: "On acreage, many homeowners pour concrete near the house and garage and keep gravel for the rest. Ask each contractor to price a few options.",
+          },
+          {
+            title: "City vs. county rules",
+            body: "Properties inside Willard city limits and in unincorporated Greene County can have different requirements. Your contractor should confirm which apply.",
+          },
+        ],
+        faqs: [
+          {
+            q: "Can I get quotes for a shop slab and a driveway at the same time?",
+            a: "Yes. Mention every project in the optional note on step 4, and your matched contractors can quote everything in one visit.",
+          },
+          {
+            q: "How thick should a shop slab be?",
+            a: "It depends on what will sit on it. Many shop slabs are 5–6 inches with rebar, and thicker where lifts or heavy equipment will sit. Ask each contractor to explain their recommended spec.",
+          },
+          {
+            q: "Do you serve rural addresses outside Willard?",
+            a: "Yes. If you're in the 65781 ZIP code or nearby northwest Greene County, we can match you with contractors who serve your area.",
+          },
+        ],
+      },
+      "battlefield-mo": {
+        intro: [
+          "Battlefield's established, tree-lined streets off Weaver Road and Highway FF are full of 1970s–1990s homes, and many still have their original concrete. After 30 to 50 years of Ozarks freeze-thaw, those driveways, garage aprons, and front walks are showing it: cracks, sunken sections, trip hazards, and slabs lifted by big oak and maple roots.",
+          "Just east of Wilson's Creek National Battlefield, Battlefield homeowners deserve contractors who show up and do it right. We'll match you with 2–3 vetted local pros so you can compare leveling and replacement quotes on your terms.",
+        ],
+        considerations: [
+          {
+            title: "Original concrete at the end of its life",
+            body: "Concrete from the 1970s–90s often wasn't air-entrained or reinforced the way it is today. If yours is crumbling or badly cracked, replacement may beat repeated patching.",
+          },
+          {
+            title: "Trip hazards on walks & steps",
+            body: "Sunken sidewalk panels and porch steps are a fall risk. Polyjacking can often bring panels back to level in a few hours, without tearing anything out.",
+          },
+          {
+            title: "Mature trees vs. new slabs",
+            body: "If roots caused the damage, make sure each quote explains how they'll keep it from happening again.",
+          },
+        ],
+        faqs: [
+          {
+            q: "My Battlefield driveway is 40 years old. Repair or replace?",
+            a: "If it's sunken but mostly intact, leveling may buy many more years. If it's scaling, crumbling, or cracked into many pieces, replacement usually makes more sense. Ask for both options when your pros visit.",
+          },
+          {
+            q: "Can sunken sidewalk panels be fixed without replacing them?",
+            a: "Often, yes. Polyjacking lifts panels back to level through small holes, and the area is usually walkable the same day.",
+          },
+          {
+            q: "Is your service really free for Battlefield homeowners?",
+            a: "Yes, 100% free. Our local partner contractors pay us; you never pay us anything and you're never obligated to hire.",
+          },
+        ],
+      },
+      "rogersville-mo": {
+        intro: [
+          "Rogersville homeowners east of Springfield often have more than a driveway to think about. Shops, barns, detached garages, and equipment pads on acreage along US-60 and Highway 125 all need solid concrete. Newer subdivisions near the Logan-Rogersville schools are adding patios, walks, and parking pads too.",
+          "Whether you're in town or out toward Fordland, we'll match you with 2–3 vetted local concrete contractors who regularly work in Webster and eastern Greene County. One simple request, honest quotes, and no spam calls.",
+        ],
+        considerations: [
+          {
+            title: "Webster vs. Greene County",
+            body: "Rogersville straddles county lines, and city vs. unincorporated properties can have different requirements. Your contractor should know which apply to your address.",
+          },
+          {
+            title: "Heavy-duty slabs for rural use",
+            body: "Trucks, trailers, and farm equipment need thicker, reinforced concrete. Tell us what will park on the slab so we can match you with the right crews.",
+          },
+          {
+            title: "Contractors who actually make the drive",
+            body: "Some Springfield-based crews skip jobs out east during busy season. We only match you with pros who serve your ZIP code.",
+          },
+        ],
+        faqs: [
+          {
+            q: "Do concrete contractors actually come out to Rogersville?",
+            a: "Yes. We only match you with contractors who serve your ZIP code, so you won't be passed to someone who considers 65742 too far away.",
+          },
+          {
+            q: "Can I get one quote for a shop slab, driveway, and patio?",
+            a: "Absolutely. List each project in your note and your matched contractors can quote them together. Bundling often lowers the price.",
+          },
+          {
+            q: "Do I need a permit in Rogersville?",
+            a: "It depends on whether your property is inside city limits and which county it's in. Your matched contractor will confirm the requirements for your address.",
+          },
+        ],
+      },
+    },
+  },
+
+  /* ── Example 2nd trade (disabled). Flip `enabled` to true to launch it. ──
+     With no cityContent, its city pages use the localized fallback templates. */
+  {
+    slug: "roofing",
+    enabled: false,
     name: "Roofing",
     proSingular: "roofer",
     proPlural: "roofers",
     subject: "roof",
     serviceType: "Roofing contractor referral",
     shortDescription: "Roof replacement, storm & hail damage, leak repair, and gutters.",
+    notePlaceholder: "e.g. Hail last spring, some missing shingles on the north side",
     projectTypes: [
       { id: "replacement", label: "Full Roof Replacement", description: "Tear-off & new roof", icon: "home" },
       { id: "repair", label: "Leak or Roof Repair", description: "Missing shingles, leaks, flashing", icon: "wrench" },
@@ -74,312 +411,20 @@ export const trades: Trade[] = [
     localConsiderations: [
       {
         title: "Hail is the #1 roof killer in the 417",
-        body: "Southwest Missouri sits in one of the most active hail corridors in the country, and spring storms routinely bruise shingles without obvious leaks. A vetted local roofer can document hail damage for your insurance adjuster before small bruises turn into big leaks.",
-      },
-      {
-        title: "Ask about Class 4 impact-resistant shingles",
-        body: "Many Missouri insurers offer premium discounts for UL 2218 Class 4 impact-rated shingles. When you compare your 2 quotes, ask each roofer to price both a standard architectural shingle and a Class 4 option.",
-      },
-      {
-        title: "Freeze-thaw and ice dams",
-        body: "Ozarks winters bounce above and below freezing constantly, and ice storms like the one that crippled Springfield in 2007 can load gutters and eaves. Proper ice-and-water shield along eaves and valleys matters here more than many homeowners realize.",
+        body: "Southwest Missouri sits in an active hail corridor, and spring storms routinely bruise shingles without obvious leaks. A local roofer can document damage for your insurance adjuster.",
       },
       {
         title: "Beware of storm chasers",
-        body: "After every major hailstorm, out-of-state crews flood Greene and Christian Counties. They're often gone before warranty issues show up. Every pro we match you with is a local, established company — not a crew that leaves when the storm season ends.",
+        body: "After big hailstorms, out-of-state crews flood Greene and Christian Counties. Every pro we match you with is an established local company.",
       },
     ],
     faqs: [
-      {
-        q: "How do I know if my roof has hail damage?",
-        a: "Hail damage often isn't visible from the ground. Look for dented gutters, downspouts, or AC fins after a storm — that's a good sign your shingles took hits too. Either of your 2 matched roofers can do an inspection and tell you whether it's worth filing a claim.",
-      },
       {
         q: "Will the roofers help with my insurance claim?",
-        a: "Most established 417 roofers are very familiar with local adjusters and can document damage with photos and measurements. You are always in control of your claim — never sign over your insurance proceeds without reading the contract carefully.",
+        a: "Most established 417 roofers know local adjusters and can document damage with photos and measurements. Never sign over insurance proceeds without reading the contract carefully.",
       },
     ],
-    partner: {
-      monthlyPrice: 497,
-      seatsTotal: 2,
-      seatsOpen: 2,
-      leadEstimate: "a steady flow of exclusive-to-2 homeowner requests every month",
-    },
-    cityContent: {
-      "springfield-mo": {
-        intro: [
-          "Springfield's roofs tell the story of the city itself. The 1920s bungalows and Tudors in Rountree, Phelps Grove, and Midtown often have steep pitches, multiple layers of old shingles, and original wood decking that needs to be inspected (and sometimes replaced) during a tear-off. Out on the south side past Battlefield Mall, newer homes tend to have complex rooflines with lots of valleys — great looking, but more places for water to sneak in.",
-          "Whether you're near Missouri State University, off Commercial Street, or in Southern Hills, we'll match you with up to 2 vetted Springfield roofers who know Greene County weather and local code requirements — so you can compare honest prices without getting buried in calls.",
-        ],
-        considerations: [
-          {
-            title: "Historic districts may need extra review",
-            body: "If you live in one of Springfield's designated historic districts (like Walnut Street or parts of Midtown), visible exterior changes may require review before work begins. A local roofer will know whether your project needs it.",
-          },
-          {
-            title: "Multiple shingle layers on older homes",
-            body: "Many older Springfield homes have two (or more) layers of shingles. Building codes generally limit how many layers are allowed, so a full tear-off is often required. Make sure both quotes spell out tear-off, disposal, and decking replacement costs.",
-          },
-          {
-            title: "Permits through the City of Springfield",
-            body: "Roof replacements inside city limits typically go through Building Development Services. Ask each roofer whether permit fees are included in their quote.",
-          },
-        ],
-        faqs: [
-          {
-            q: "Do I need a permit to replace my roof in Springfield, MO?",
-            a: "In many cases, yes — roof replacements in Springfield city limits generally require a permit through Building Development Services. Reputable local roofers pull the permit for you. Confirm it's included when comparing your 2 quotes.",
-          },
-          {
-            q: "How long does a roof replacement take in Springfield?",
-            a: "A typical single-family roof replacement takes 1–3 days once materials are delivered. After a major hailstorm, demand spikes across Springfield and lead times can stretch to several weeks — another reason to get matched early.",
-          },
-          {
-            q: "Do you serve all Springfield ZIP codes?",
-            a: "Yes. We match homeowners across 65802, 65803, 65804, 65806, 65807, 65809, and 65810 — from the north side near Doling Park to the far south side.",
-          },
-        ],
-      },
-      "nixa-mo": {
-        intro: [
-          "Nixa has grown fast, and a lot of the roofs on subdivision homes off Tracker Road, Northview, and the Highway 160 corridor were installed in the same building boom. That means many neighborhoods are hitting the 15–25 year mark at the same time — right when builder-grade 3-tab shingles start to curl, crack, and lose granules.",
-          "Add Christian County's spring hail storms to the mix and it's no surprise that roofing is one of the most-requested projects in Nixa. Tell us about your roof and we'll connect you with up to 2 vetted local roofers who regularly work in Nixa neighborhoods — no call-center spam.",
-        ],
-        considerations: [
-          {
-            title: "HOA approval on shingle colors",
-            body: "Many Nixa subdivisions have HOA covenants that restrict shingle color or style. Check with your HOA before you sign, and ask both roofers if they can provide sample boards for approval.",
-          },
-          {
-            title: "Builder-grade roofs aging out together",
-            body: "If your neighbors are getting new roofs, there's a good chance yours was installed in the same era. A free inspection from a local pro can tell you how much life you have left.",
-          },
-          {
-            title: "Wind exposure on open lots",
-            body: "Newer Nixa subdivisions often have fewer mature trees, which means more wind exposure. Ask about high-wind-rated shingles and proper starter strip installation.",
-          },
-        ],
-        faqs: [
-          {
-            q: "Does my Nixa HOA need to approve my new roof?",
-            a: "It depends on your subdivision's covenants, but many Nixa HOAs do require approval for shingle color and style. Get approval in writing before work starts — either of your matched roofers can help with sample colors.",
-          },
-          {
-            q: "Do roofers in Nixa need a permit?",
-            a: "Roofing work inside Nixa city limits may require a permit through the City of Nixa. Your roofer should know the current requirements and include any permit costs in their quote.",
-          },
-          {
-            q: "How quickly can I get a quote in Nixa?",
-            a: "Most Nixa homeowners hear from their matched roofers within one business day. After big storms, response times can be a bit longer as demand spikes.",
-          },
-        ],
-      },
-      "ozark-mo": {
-        intro: [
-          "Ozark offers a little of everything when it comes to roofs: historic homes around the square, wooded lots along the Finley River, and plenty of 2000s-era subdivisions east of Highway 65. Each comes with different challenges — from fragile older decking to tree debris clogging valleys and gutters.",
-          "Whether you're near Finley River Park, off J Highway, or out along CC, we'll match you with up to 2 vetted local roofers who know Christian County's weather and building requirements. One request, two honest quotes, zero spam.",
-        ],
-        considerations: [
-          {
-            title: "Tree cover and moss near the Finley",
-            body: "Homes on wooded lots near the Finley River stay shaded and damp, which can lead to moss, algae streaking, and clogged valleys. Ask about algae-resistant shingles and gutter guards.",
-          },
-          {
-            title: "Older decking around the square",
-            body: "Older homes near the historic square may have plank decking or damage hidden under several layers of shingles. Make sure each quote lists a per-sheet price for any decking replacement.",
-          },
-          {
-            title: "Christian County storm season",
-            body: "Spring hail and summer straight-line winds hit Ozark hard. A local roofer can inspect after a storm and help you understand whether an insurance claim makes sense.",
-          },
-        ],
-        faqs: [
-          {
-            q: "Do I need a building permit for a new roof in Ozark, MO?",
-            a: "Roofing projects inside Ozark city limits may require a permit through the City of Ozark. Reputable local roofers handle this for you — ask whether it's included when you compare quotes.",
-          },
-          {
-            q: "My house is surrounded by trees. What should I ask roofers?",
-            a: "Ask about algae-resistant shingles, gutter guards, and whether they recommend trimming overhanging branches before installation. Tree-heavy lots along the Finley benefit from all three.",
-          },
-          {
-            q: "Do you match homeowners outside Ozark city limits?",
-            a: "Yes — if you're in the 65721 ZIP code or elsewhere in Christian County, we can match you with local pros who serve your area.",
-          },
-        ],
-      },
-      "republic-mo": {
-        intro: [
-          "Republic is one of the fastest-growing cities in Greene County, and many homes along the Highway 60 and 174 corridors sit on open, wind-exposed lots with few mature trees to break up a storm. When hail and straight-line winds roll across the prairie west of Springfield, Republic roofs often take the brunt of it.",
-          "From newer north-side subdivisions to older ranch homes near downtown and the neighborhoods around Wilson's Creek National Battlefield, we'll connect you with up to 2 vetted local roofers who know Republic — and who won't disappear after the storm season ends.",
-        ],
-        considerations: [
-          {
-            title: "Wind-rated installation matters here",
-            body: "Open lots mean higher wind exposure. Ask both roofers about high-wind shingle ratings, nailing patterns, and whether their installation qualifies for the manufacturer's enhanced wind warranty.",
-          },
-          {
-            title: "Storm chasers target growing towns",
-            body: "After major storms, door-knockers often canvass newer Republic subdivisions. Stick with established local companies who'll be around to honor their workmanship warranty.",
-          },
-          {
-            title: "Check permit requirements with the city",
-            body: "Republic has its own building department. Your roofer should confirm whether a permit is required and include it in the quote.",
-          },
-        ],
-        faqs: [
-          {
-            q: "Why do Republic roofs seem to get more storm damage?",
-            a: "Many Republic neighborhoods are newer and sit on open ground with fewer mature trees to block wind and hail. That exposure makes quality installation and impact-resistant shingles especially valuable.",
-          },
-          {
-            q: "Do I need a roofing permit in Republic, MO?",
-            a: "Roof replacements in Republic city limits may require a permit. A reputable local roofer will know the current rules and pull any required permits for you.",
-          },
-          {
-            q: "How many roofers will contact me?",
-            a: "No more than 2. That's our 2-Quote Guarantee — your information is never sold to a list of 5+ companies.",
-          },
-        ],
-      },
-      "willard-mo": {
-        intro: [
-          "Willard roofs range from small-town ranch homes in town to rural properties with barns, shops, and outbuildings along Highway 160 and AB. Many homeowners here want quotes that cover more than just the house — and not every roofer is set up for metal roofing on a pole barn or a detached shop.",
-          "Tell us what you need roofed and we'll match you with up to 2 vetted local roofers who serve Willard and northwest Greene County, from the Frisco Highline Trail trailhead out toward Walnut Grove. Two honest quotes, no spam calls.",
-        ],
-        considerations: [
-          {
-            title: "Outbuildings and metal roofing",
-            body: "If you have a barn, shop, or detached garage, mention it in your project notes. We'll prioritize matching you with roofers who handle both shingles and metal.",
-          },
-          {
-            title: "City vs. county rules",
-            body: "Properties inside Willard city limits and those in unincorporated Greene County can have different permit requirements. Your roofer should confirm which applies.",
-          },
-          {
-            title: "Exposure on rural lots",
-            body: "Open acreage means more wind and hail exposure. Ask about impact-resistant shingles or metal roofing, which many Missouri insurers reward with discounts.",
-          },
-        ],
-        faqs: [
-          {
-            q: "Can I get quotes for my house and my shop at the same time?",
-            a: "Yes. Just mention every structure in the optional project note on step 4. Your 2 matched roofers can quote everything in one visit.",
-          },
-          {
-            q: "Is metal roofing a good idea in Willard?",
-            a: "Metal roofing is popular on rural 417 properties because of its long lifespan and storm resistance. Ask both roofers to price metal alongside architectural shingles so you can compare.",
-          },
-          {
-            q: "Do you serve rural addresses outside Willard?",
-            a: "Yes. If you're in the 65781 ZIP code or nearby northwest Greene County, we can match you with local roofers who serve your area.",
-          },
-        ],
-      },
-      "battlefield-mo": {
-        intro: [
-          "Battlefield is known for its established, tree-lined streets off Weaver Road and Highway FF — and those mature oaks and maples are beautiful until they drop limbs on your roof or pack your gutters with leaves every fall. Many homes here were built in the 1970s through 1990s and are on their second or third roof.",
-          "Just east of Wilson's Creek National Battlefield, Battlefield homeowners deserve local roofers who show up, do it right, and don't hand your number to a call center. We'll match you with up to 2 vetted pros so you can compare quotes on your terms.",
-        ],
-        considerations: [
-          {
-            title: "Mature trees = more roof wear",
-            body: "Overhanging branches scrape shingles, drop debris, and keep roofs damp. Ask each roofer whether they recommend trimming and gutter guards as part of your project.",
-          },
-          {
-            title: "Ventilation on older ranch homes",
-            body: "Many 1970s–1990s Battlefield homes were built with minimal attic ventilation, which shortens shingle life. A good quote will address ridge vents and intake ventilation — not just shingles.",
-          },
-          {
-            title: "Second and third roofs",
-            body: "If your home has had a layover in the past, expect a full tear-off this time. Make sure both quotes include disposal and any decking repair pricing.",
-          },
-        ],
-        faqs: [
-          {
-            q: "My Battlefield home is surrounded by big trees. Will that affect my quote?",
-            a: "Possibly. Heavy tree cover can mean extra cleanup, protective tarps, and recommended gutter guards. Ask both roofers to itemize so you can compare apples to apples.",
-          },
-          {
-            q: "Why does attic ventilation matter for my new roof?",
-            a: "Poor ventilation traps heat and moisture in the attic, which can void shingle warranties and shorten roof life. Many older Battlefield homes benefit from added ridge and soffit vents during replacement.",
-          },
-          {
-            q: "Is your service really free for Battlefield homeowners?",
-            a: "Yes, 100% free. Our local partner contractors pay a flat membership fee — you never pay us anything.",
-          },
-        ],
-      },
-      "rogersville-mo": {
-        intro: [
-          "Rogersville homeowners east of Springfield often have more than a house to think about — detached garages, shops, and barns on acreage along US-60 and Highway 125 all need solid roofs too. And newer subdivisions near Logan-Rogersville schools are starting to age into their first round of roof replacements.",
-          "Whether you're in town or out toward Fordland, we'll match you with up to 2 vetted local roofers who regularly work in Webster and eastern Greene County. One simple request. Two honest quotes. No spam calls.",
-        ],
-        considerations: [
-          {
-            title: "Webster vs. Greene County",
-            body: "Rogersville straddles county lines, and properties in city limits vs. unincorporated areas may have different permit rules. Your roofer should know which applies to your address.",
-          },
-          {
-            title: "Multiple structures on acreage",
-            body: "Mention shops, barns, or detached garages in your project note so your matched roofers can quote everything in a single trip.",
-          },
-          {
-            title: "Longer drive times after storms",
-            body: "After major storms, some Springfield-based crews prioritize closer jobs. We match you with pros who actively serve the Rogersville area.",
-          },
-        ],
-        faqs: [
-          {
-            q: "Do roofers actually come out to Rogersville?",
-            a: "Yes. We only match you with roofers who serve your ZIP code, so you won't be passed to someone who considers 65742 too far away.",
-          },
-          {
-            q: "Can I get a metal roof quote for my barn or shop?",
-            a: "Absolutely. Mention it in your project note and we'll prioritize roofers who handle metal roofing on outbuildings.",
-          },
-          {
-            q: "Do I need a permit in Rogersville?",
-            a: "It depends on whether your property is inside city limits and which county it's in. Your matched roofer will confirm the requirements for your address.",
-          },
-        ],
-      },
-    },
-  },
-
-  /* ── Example 2nd trade (disabled). Flip `enabled` to true to launch it. ── */
-  {
-    slug: "hvac",
-    enabled: false,
-    name: "HVAC",
-    proSingular: "HVAC contractor",
-    proPlural: "HVAC contractors",
-    subject: "heating & cooling system",
-    serviceType: "HVAC contractor referral",
-    shortDescription: "AC replacement, furnace installs, heat pumps, and repairs.",
-    projectTypes: [
-      { id: "ac", label: "AC Repair or Replace", description: "Not cooling, old unit", icon: "snowflake" },
-      { id: "furnace", label: "Furnace / Heating", description: "Repair or new furnace", icon: "flame" },
-      { id: "heat-pump", label: "Heat Pump", description: "New install or upgrade", icon: "fan" },
-      { id: "tuneup", label: "Tune-Up / Inspection", description: "Seasonal maintenance", icon: "search" },
-    ],
-    localConsiderations: [
-      {
-        title: "Humid Ozarks summers",
-        body: "Southwest Missouri summers are hot and humid, so proper sizing and dehumidification matter as much as raw cooling power.",
-      },
-      {
-        title: "Heat pumps and Missouri winters",
-        body: "Modern cold-climate heat pumps handle most Ozarks winters well, often with a gas or electric backup for the coldest nights.",
-      },
-    ],
-    faqs: [
-      {
-        q: "Should I repair or replace my AC?",
-        a: "If your system is 12–15+ years old or needs a major repair, replacement often makes more sense. Your 2 matched pros can give you both options.",
-      },
-    ],
-    partner: { monthlyPrice: 497, seatsTotal: 2, seatsOpen: 2, leadEstimate: "a steady flow of exclusive-to-2 homeowner requests every month" },
+    partner: defaultPartnerPlans,
     cityContent: {},
   },
 ];

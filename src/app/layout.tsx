@@ -10,7 +10,7 @@ const trade = getPrimaryTrade();
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: `${site.name} | Compare ${site.maxQuotes} Free ${trade.name} Quotes in Springfield, MO & the 417`,
+    default: `${site.name} | Compare ${site.quoteRange} Free ${trade.name} Quotes in Springfield, MO & the 417`,
     template: `%s | ${site.name}`,
   },
   description: `Get up to ${site.maxQuotes} free quotes from vetted local ${trade.proPlural} in Springfield, Nixa, Ozark, Republic & across Southwest Missouri. No spam calls — ${site.maxQuotes} pros max, guaranteed.`,
