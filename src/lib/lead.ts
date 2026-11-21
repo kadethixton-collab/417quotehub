@@ -18,6 +18,8 @@ export type LeadInput = {
   phone: string;
   email: string;
   note?: string;
+  /** Public URLs of uploaded project photos (max 3). */
+  photos?: string[];
   consent: boolean;
   sourcePage?: string;
   /** Honeypot — must stay empty. */

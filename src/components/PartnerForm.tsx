@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { formatPhone, validatePartner, type FieldErrors, type PartnerInput } from "@/lib/lead";
 import { Icon } from "./Icons";
+import { track } from "@/lib/analytics";
 
 type Props = {
   /** Open seats per territory for each trade. */
@@ -57,6 +58,7 @@ export default function PartnerForm({ trades, cities }: Props) {
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.ok) {
         setSeatStatus(data.seatStatus ?? "");
+        track("partner_application", { trade: form.trade, cities: form.serviceCities.length, seat_status: data.seatStatus ?? "" });
         setStatus("done");
         return;
       }

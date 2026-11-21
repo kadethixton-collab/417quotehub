@@ -115,14 +115,66 @@ Contractor applications from `/contractors` POST to `/api/submit-partner`. They 
 
 Any endpoint that accepts JSON works: Zapier/Make/n8n "Catch Hook", a Slack workflow, GoHighLevel, HubSpot, or your own API. Route on the `type` field.
 
+## Google Sheet lead log (free): emails partners, builds your monthly report
+
+`integrations/google-sheets/Code.gs` is a Google Apps Script that turns a Google Sheet into your lead back office, with no Zapier or paid tools. For every request it:
+
+- logs the lead to a **Leads** tab, with blank **Outcome** and **Your Notes** columns for you to fill in,
+- **emails each matched partner the full lead instantly**, with reply-to set to the homeowner,
+- emails you a copy, with the subject flagged **⚠ UNMATCHED** when no partner holds that territory,
+- adds a row per partner to **Partner Leads**, which feeds a live **Monthly Report** of leads per partner per month (send each partner their numbers with their invoice) and unmatched leads by territory (the demand you can show when selling seats),
+- logs contractor applications to **Partner Applications** and emails you.
+
+**Setup (about 5 minutes):**
+
+1. Create a Google Sheet (use the Google account that should send the emails).
+2. **Extensions → Apps Script**, delete the sample code, paste in `Code.gs`, and click **Save**.
+3. Edit `CONFIG` at the top. Optionally set `SHARED_SECRET` to a random string.
+4. Pick `setup` in the function dropdown, click **Run**, and approve the permissions.
+5. **Deploy → New deployment → Web app**. Set *Execute as*: **Me**, *Who has access*: **Anyone**, then **Deploy** and copy the URL.
+6. In Vercel, set `LEAD_WEBHOOK_URL` to that URL. If you set a secret, add `?key=YOUR_SECRET`. To also send leads to Zapier, comma-separate the URLs.
+7. Redeploy on Vercel, then submit a test request on the live site.
+
+Gmail allows about 100 emails a day on a free account (1,500 on Google Workspace), which covers roughly 30 leads a day. If you edit the script later, use **Deploy → Manage deployments → Edit → New version** so the URL stays the same.
+
+## Analytics & conversion tracking
+
+- **Vercel Web Analytics:** turn it on in the project's **Analytics** tab. Page views and form events are recorded automatically on Vercel.
+- **Google Analytics 4 (optional):** set `NEXT_PUBLIC_GA_ID=G-XXXXXXX`. It loads after the page is interactive, so it doesn't slow the site down. Mark `generate_lead` as a key event in GA4 to use it for Google Ads conversion tracking later.
+
+Form funnel events (no names, phones, or emails are ever sent):
+
+| Event | When |
+| --- | --- |
+| `quote_start` | First click in the form |
+| `quote_step_view` | Each step shown (`step`, `step_name`, whether city/service were preset) |
+| `quote_validation_error` | Contact step had errors (`fields`) |
+| `quote_photo_uploaded` / `quote_photo_error` | Photo upload results |
+| `quote_success` + `generate_lead` | Request submitted (`project_type`, `city`, `matched`, `photos`) |
+| `quote_error` | Submit failed |
+| `mobile_cta_click`, `partner_application` | Sticky CTA taps, contractor applications |
+
+Compare `quote_step_view` counts for steps 1 through 4 to see exactly where homeowners drop off.
+
+## Project photos (optional)
+
+Homeowners can attach up to 3 photos on the last step. Photos are resized to 1600px in the browser, which keeps uploads fast on mobile data and removes GPS location data from phone pictures. They're stored in Vercel Blob, and the links are included in the lead and in partner emails.
+
+To enable it: Vercel → **Storage → Create → Blob**, then connect it to this project (this adds `BLOB_READ_WRITE_TOKEN`) and **redeploy**. Without the token the photo field stays hidden.
+
+## Spam protection
+
+The forms include a hidden honeypot field, a minimum fill time, server-side validation, and a per-IP rate limit (5 requests per 10 minutes). Only photo links from your own Blob store are accepted. For heavy abuse, add a rate-limit rule in Vercel's Firewall.
+
 ## Deploying to Vercel
 
 1. Push this repo to GitHub.
 2. Go to [vercel.com/new](https://vercel.com/new) and import the repo. The framework is detected as Next.js; no build settings need changing.
 3. Under **Settings → Environment Variables**, add:
-   - `LEAD_WEBHOOK_URL`: your Zapier/Make/CRM webhook URL
+   - `LEAD_WEBHOOK_URL`: your Google Sheet web app URL (see above), plus any Zapier/CRM hooks, comma-separated
    - `PARTNER_WEBHOOK_URL` (optional)
-   - `NEXT_PUBLIC_SITE_URL`: `https://417quotehub.com`. It's used for canonical URLs, the sitemap, and JSON-LD.
+   - `NEXT_PUBLIC_SITE_URL`: `https://417quotehub.com`.
+   - Optional: `NEXT_PUBLIC_GA_ID`. `BLOB_READ_WRITE_TOKEN` is added automatically when you connect a Blob store. It's used for canonical URLs, the sitemap, and JSON-LD.
 4. Deploy. Then add `417quotehub.com` (and `www.417quotehub.com`, redirecting to the apex) under **Settings → Domains**.
 5. Submit `https://417quotehub.com/sitemap.xml` in Google Search Console.
 
@@ -169,8 +221,21 @@ Adding analytics or chat widgets will lower those scores. Load them with `next/s
 
 ## Before launch: checklist
 
+**Must do**
+- [ ] Deploy to Vercel and connect `417quotehub.com` (and redirect `www`)
+- [ ] Set up the Google Sheet lead log and put its URL in `LEAD_WEBHOOK_URL`
+- [ ] Submit a test request on the live site and confirm the sheet row and your email arrive
 - [ ] Set the real retainer price in `trades.ts` (`defaultPartnerPlan.monthlyPrice` is a **$597/mo** placeholder)
-- [ ] Add each paying contractor to `src/config/partners.ts`. Seats and routing update automatically
 - [ ] Have a Missouri attorney review `/privacy` and `/terms`, including TCPA consent wording for calls and texts
-- [ ] Connect `LEAD_WEBHOOK_URL` and send a test lead
+- [ ] Make sure `quotes@417quotehub.com` actually receives mail
+
+**Should do**
+- [ ] Turn on Vercel Web Analytics; add GA4 if you plan to run Google Ads
+- [ ] Connect a Vercel Blob store to enable photo uploads
+- [ ] Submit `https://417quotehub.com/sitemap.xml` in Google Search Console
 - [ ] Verify the city facts (neighborhoods, landmarks, permit offices) against your local knowledge
+- [ ] Share the homepage link once to check the social preview image
+
+**When a contractor pays**
+- [ ] Add them to `src/config/partners.ts`, then commit. Vercel redeploys and their leads start routing
+- [ ] Do a test lead in their territory and confirm they receive the email

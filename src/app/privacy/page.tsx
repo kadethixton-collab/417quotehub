@@ -20,9 +20,10 @@ export default function Privacy() {
 
       <h2>Information we collect</h2>
       <ul>
-        <li><strong>Information you provide:</strong> name, phone number, email address, city, ZIP code, project type, timeline, and any project notes you submit through our quote form.</li>
+        <li><strong>Information you provide:</strong> name, phone number, email address, city, ZIP code, project type, timeline, and any project notes or photos you submit through our quote form.</li>
+        <li><strong>Project photos:</strong> photos you choose to upload are resized in your browser, which also removes embedded metadata such as GPS location, before they are stored. They are kept at unlisted web addresses and shared only with your matched contractors.</li>
         <li><strong>Contractor applications:</strong> company name, contact details, trade, service areas, and related business information.</li>
-        <li><strong>Automatically collected information:</strong> basic technical data such as browser type, device type, pages visited, and referring URL, collected through standard server logs and, if enabled, privacy-friendly analytics.</li>
+        <li><strong>Automatically collected information:</strong> basic technical data such as browser type, device type, pages visited, referring URL, and which steps of the quote form were completed. This is collected through server logs and analytics tools (such as Vercel Web Analytics and, if enabled, Google Analytics, which may use cookies). We never send your name, phone number, or email to analytics tools.</li>
       </ul>
 
       <h2>How we use your information</h2>

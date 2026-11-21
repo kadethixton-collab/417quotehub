@@ -45,6 +45,7 @@ export default function Hero({ trade, headline, subheadline, defaultCity, defaul
             brandName={site.name}
             maxQuotes={site.maxQuotes}
             quoteRange={site.quoteRange}
+            photosEnabled={!!process.env.BLOB_READ_WRITE_TOKEN}
           />
         </div>
       </div>

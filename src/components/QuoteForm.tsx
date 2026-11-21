@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import type { Trade } from "@/config/trades";
 import { Icon } from "./Icons";
+import PhotoPicker from "./PhotoPicker";
+import { track } from "@/lib/analytics";
 import {
   TIMELINES,
   digitsOnly,
@@ -24,11 +26,13 @@ type Props = {
   brandName: string;
   maxQuotes: number;
   quoteRange: string;
+  /** Show the optional photo upload (requires BLOB_READ_WRITE_TOKEN on the server). */
+  photosEnabled?: boolean;
 };
 
 const STEPS = ["Project", "Timeline", "Location", "Contact"] as const;
 
-export default function QuoteForm({ trade, cities, defaultCity, defaultProjectType, brandName, maxQuotes, quoteRange }: Props) {
+export default function QuoteForm({ trade, cities, defaultCity, defaultProjectType, brandName, maxQuotes, quoteRange, photosEnabled = false }: Props) {
   const presetType = trade.projectTypes.some((p) => p.id === defaultProjectType) ? defaultProjectType! : "";
   const [step, setStep] = useState(presetType ? 1 : 0);
   const [projectType, setProjectType] = useState(presetType);
@@ -45,6 +49,13 @@ export default function QuoteForm({ trade, cities, defaultCity, defaultProjectTy
   const [note, setNote] = useState("");
   const [consent, setConsent] = useState(false);
   const [company, setCompany] = useState(""); // honeypot
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [photosBusy, setPhotosBusy] = useState(false);
+  const onPhotos = useCallback((urls: string[], busy: boolean) => {
+    setPhotos(urls);
+    setPhotosBusy(busy);
+  }, []);
+  const started = useRef(false);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [status, setStatus] = useState<"idle" | "submitting" | "done" | "error">("idle");
   const [serverError, setServerError] = useState("");
@@ -56,6 +67,19 @@ export default function QuoteForm({ trade, cities, defaultCity, defaultProjectTy
   useEffect(() => {
     startedAt.current = Date.now();
   }, []);
+
+  // Funnel tracking: which step people reach (no personal info is ever sent).
+  const STEP_EVENTS = ["project", "timeline", "location", "contact"];
+  useEffect(() => {
+    track("quote_step_view", { step: step + 1, step_name: STEP_EVENTS[step], trade: trade.slug, preset_city: !!defaultCity, preset_project: !!presetType });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
+  const markStarted = () => {
+    if (started.current) return;
+    started.current = true;
+    track("quote_start", { trade: trade.slug, page: window.location.pathname });
+  };
 
   // Move focus to the new step's heading for keyboard & screen-reader users.
   useEffect(() => {
@@ -102,9 +126,13 @@ export default function QuoteForm({ trade, cities, defaultCity, defaultProjectTy
   async function onSubmit(ev: FormEvent) {
     ev.preventDefault();
     if (step !== 3) return;
+    if (photosBusy) return;
     const e = validateContact({ fullName, phone, email, consent });
     setErrors(e);
-    if (Object.keys(e).length) return;
+    if (Object.keys(e).length) {
+      track("quote_validation_error", { fields: Object.keys(e).join(",") });
+      return;
+    }
 
     setStatus("submitting");
     setServerError("");
@@ -122,6 +150,7 @@ export default function QuoteForm({ trade, cities, defaultCity, defaultProjectTy
           phone,
           email,
           note,
+          photos,
           consent,
           company,
           startedAt: startedAt.current,
@@ -130,14 +159,20 @@ export default function QuoteForm({ trade, cities, defaultCity, defaultProjectTy
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.ok) {
-        setMatched(Array.isArray(data.matched) ? data.matched : []);
+        const m: string[] = Array.isArray(data.matched) ? data.matched : [];
+        setMatched(m);
+        track("quote_success", { trade: trade.slug, project_type: projectType, timeline, city, matched: m.length, photos: photos.length });
+        // GA4's recommended conversion event, for Google Ads / GA conversion tracking.
+        (window as Window & { gtag?: (...a: unknown[]) => void }).gtag?.("event", "generate_lead", { currency: "USD", value: 0 });
         setStatus("done");
         return;
       }
       if (data.errors) setErrors(data.errors);
+      track("quote_error", { status: res.status });
       setServerError(data.error || "Please check the highlighted fields and try again.");
       setStatus("error");
     } catch {
+      track("quote_error", { status: "network" });
       setServerError("Network error — please check your connection and try again.");
       setStatus("error");
     }
@@ -231,6 +266,7 @@ export default function QuoteForm({ trade, cities, defaultCity, defaultProjectTy
                   type="button"
                   aria-pressed={projectType === p.id}
                   onClick={() => {
+                    markStarted();
                     setProjectType(p.id);
                     go(1);
                   }}
@@ -261,6 +297,7 @@ export default function QuoteForm({ trade, cities, defaultCity, defaultProjectTy
                   type="button"
                   aria-pressed={timeline === t.id}
                   onClick={() => {
+                    markStarted();
                     setTimeline(t.id);
                     go(2);
                   }}
@@ -359,6 +396,7 @@ export default function QuoteForm({ trade, cities, defaultCity, defaultProjectTy
                 </label>
                 <textarea id="qf-note" rows={2} maxLength={1000} placeholder={trade.notePlaceholder} value={note} onChange={(e) => setNote(e.target.value)} className={input} />
               </div>
+              {photosEnabled && <PhotoPicker onChange={onPhotos} />}
               {/* Honeypot: hidden from humans */}
               <div className="absolute -left-[9999px]" aria-hidden="true">
                 <label htmlFor="qf-company">Company</label>
@@ -398,8 +436,8 @@ export default function QuoteForm({ trade, cities, defaultCity, defaultProjectTy
           </button>
         )}
         {step === 3 && (
-          <button type="submit" disabled={status === "submitting"} className="ml-auto inline-flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-accent-500 px-4 py-3.5 text-base font-bold sm:px-5 sm:text-lg text-slate-900 shadow hover:bg-accent-400 focus:outline-none focus-visible:ring-4 focus-visible:ring-accent-200 disabled:opacity-60">
-            {status === "submitting" ? "Matching you…" : `Get My ${quoteRange} Free Quotes`}
+          <button type="submit" disabled={status === "submitting" || photosBusy} className="ml-auto inline-flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-accent-500 px-4 py-3.5 text-base font-bold sm:px-5 sm:text-lg text-slate-900 shadow hover:bg-accent-400 focus:outline-none focus-visible:ring-4 focus-visible:ring-accent-200 disabled:opacity-60">
+            {status === "submitting" ? "Matching you…" : photosBusy ? "Uploading photos…" : `Get My ${quoteRange} Free Quotes`}
           </button>
         )}
         {step < 2 && (

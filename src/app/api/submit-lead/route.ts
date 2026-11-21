@@ -5,12 +5,30 @@ import { tradeBySlug } from "@/config/trades";
 import { TIMELINES, normalizePhone, validateLead, type LeadInput } from "@/lib/lead";
 import { forwardToWebhook } from "@/lib/webhook";
 import { matchPartners, resolveCity } from "@/lib/routing";
+import { rateLimited } from "@/lib/rateLimit";
+
+/** Only accept photo URLs from our own Vercel Blob store. */
+const isBlobUrl = (u: unknown): u is string => {
+  if (typeof u !== "string" || u.length > 500) return false;
+  try {
+    const url = new URL(u);
+    return url.protocol === "https:" && url.hostname.endsWith(".public.blob.vercel-storage.com");
+  } catch {
+    return false;
+  }
+};
 
 export const runtime = "nodejs";
 
 const str = (v: unknown, max = 200) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 
 export async function POST(req: Request) {
+  if (rateLimited(req, "lead", 5, 10 * 60_000)) {
+    return NextResponse.json(
+      { ok: false, error: "We've received several requests from you already. Please wait a few minutes and try again." },
+      { status: 429 },
+    );
+  }
   let body: Record<string, unknown>;
   try {
     body = await req.json();
@@ -28,6 +46,7 @@ export async function POST(req: Request) {
     phone: str(body.phone, 30),
     email: str(body.email, 200),
     note: str(body.note, 1000),
+    photos: Array.isArray(body.photos) ? body.photos.filter(isBlobUrl).slice(0, 3) : [],
     consent: body.consent === true,
     sourcePage: str(body.sourcePage, 300),
     company: str(body.company, 200),
@@ -75,6 +94,7 @@ export async function POST(req: Request) {
     phone: normalizePhone(input.phone),
     email: input.email.toLowerCase(),
     note: input.note || null,
+    photos: input.photos ?? [],
     consent: true,
     consentText: `I agree to be contacted by up to ${site.maxQuotes} local contractors by phone, text, or email about my project.`,
     sourcePage: input.sourcePage || null,

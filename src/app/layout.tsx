@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import AnalyticsScripts from "@/components/AnalyticsScripts";
 import { site } from "@/config/site";
 import { getPrimaryTrade } from "@/lib/content";
 import "./globals.css";
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
   description: `Get up to ${site.maxQuotes} free quotes from vetted local ${trade.proPlural} in Springfield, Nixa, Ozark, Republic & across Southwest Missouri. No spam calls — ${site.maxQuotes} pros max, guaranteed.`,
   applicationName: site.name,
   openGraph: { type: "website", siteName: site.name, locale: "en_US" },
-  twitter: { card: "summary" },
+  twitter: { card: "summary_large_image" },
   formatDetection: { telephone: false },
 };
 
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Header />
         <main id="main" className="pb-24 md:pb-0">{children}</main>
         <Footer />
+        <AnalyticsScripts />
       </body>
     </html>
   );

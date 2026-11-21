@@ -3,6 +3,7 @@ import { site } from "@/config/site";
 import { cities } from "@/config/cities";
 import { tradeBySlug } from "@/config/trades";
 import { seatAvailability } from "@/lib/routing";
+import { rateLimited } from "@/lib/rateLimit";
 import { normalizePhone, validatePartner, type PartnerInput } from "@/lib/lead";
 import { forwardToWebhook } from "@/lib/webhook";
 
@@ -11,6 +12,9 @@ export const runtime = "nodejs";
 const str = (v: unknown, max = 200) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 
 export async function POST(req: Request) {
+  if (rateLimited(req, "partner", 5, 10 * 60_000)) {
+    return NextResponse.json({ ok: false, error: "Too many submissions. Please wait a few minutes." }, { status: 429 });
+  }
   let body: Record<string, unknown>;
   try {
     body = await req.json();

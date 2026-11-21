@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { track } from "@/lib/analytics";
 
 /**
  * Sticky bottom CTA on mobile. Hides itself while the target form is on screen
@@ -25,6 +26,7 @@ export default function MobileCtaBar({ href = "#quote", label, targetId = "quote
       <a
         href={href}
         tabIndex={hidden ? -1 : 0}
+        onClick={() => track("mobile_cta_click", { label })}
         className="block w-full rounded-xl bg-accent-500 py-3.5 text-center text-lg font-extrabold text-slate-900 shadow hover:bg-accent-400"
       >
         {label}
